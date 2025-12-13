@@ -1,11 +1,8 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './core/guards/role.guard';
 
-// Layouts
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 import { LoginComponent } from './features/auth/login/login.component';
-
-// Components
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { StockListComponent } from './features/stock/components/stock-list/stock-list.component';
 import { ProductFormComponent } from './features/stock/components/product-form/product-form.component';
@@ -19,14 +16,12 @@ import { ShiftClosingComponent } from './features/hr/components/shift-closing/sh
 import { ExpenseListComponent } from './features/finance/components/expense-list/expense-list.component';
 
 export const routes: Routes = [
-  // 1. Route Login (SANS Layout, prend tout l'écran)
   { path: 'login', component: LoginComponent },
 
-  // 2. Routes de l'Application (AVEC Layout: Header + Contenu)
   {
     path: '',
     component: MainLayoutComponent,
-    canActivate: [roleGuard], // Protection globale : il faut être connecté
+    canActivate: [roleGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       
@@ -39,8 +34,12 @@ export const routes: Routes = [
       // STOCK
       { path: 'stock', component: StockListComponent, data: { roles: ['super_admin', 'admin'] } },
       { path: 'stock/new', component: ProductFormComponent, data: { roles: ['super_admin', 'admin'] } },
+      
+      // DISHES (Updated)
       { path: 'dishes', component: DishListComponent, data: { roles: ['super_admin', 'admin'] } },
       { path: 'dishes/new', component: DishFormComponent, data: { roles: ['super_admin', 'admin'] } },
+      // ROUTE EDITION AJOUTÉE :
+      { path: 'dishes/edit/:id', component: DishFormComponent, data: { roles: ['super_admin', 'admin'] } },
 
       // POS
       { path: 'pos/tables', component: TableGridComponent, data: { roles: ['super_admin', 'admin', 'server'] } },
@@ -55,7 +54,5 @@ export const routes: Routes = [
       { path: 'finance/expenses', component: ExpenseListComponent, data: { roles: ['super_admin', 'admin'] } },
     ]
   },
-
-  // Redirection 404
   { path: '**', redirectTo: 'dashboard' }
 ];

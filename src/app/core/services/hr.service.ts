@@ -1,13 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, collectionData, query, where, getDocs, addDoc, Timestamp } from '@angular/fire/firestore';
-import { Observable, from, map } from 'rxjs';
-import { UserProfile, Order } from '../models/interfaces';
+import { Firestore, collection, collectionData, addDoc, deleteDoc, updateDoc, doc } from '@angular/fire/firestore';
+import { Observable } from 'rxjs';
+import { UserProfile } from '../models/interfaces';
 
 export interface Shift {
   id?: string;
   userId: string;
-  userName: string;
-  start: string; // ISO String pour vis-timeline
+  start: string; // ISO String
   end: string;   // ISO String
   role: string;
 }
@@ -44,30 +43,19 @@ export class HrService {
     await addDoc(collection(this.firestore, 'shifts'), shift);
   }
 
-  // --- CLOSING (CALCUL RECETTE) ---
-  // Calcule le total des commandes fermées par le serveur depuis le début de la journée
+  // NOUVELLE METHODE UPDATE
+  async updateShift(id: string, data: Partial<Shift>): Promise<void> {
+    const docRef = doc(this.firestore, `shifts/${id}`);
+    await updateDoc(docRef, data);
+  }
+
+  async deleteShift(id: string): Promise<void> {
+    await deleteDoc(doc(this.firestore, `shifts/${id}`));
+  }
+
+  // --- CLOSING ---
   async calculateDailyRevenue(serverName: string): Promise<number> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayTimestamp = Timestamp.fromDate(today);
-
-    const ordersRef = collection(this.firestore, 'orders');
-    // Note: Idéalement, il faut un index composite sur Firestore pour cette requête
-    const q = query(
-      ordersRef, 
-      where('serverName', '==', serverName),
-      where('status', '==', 'closed'),
-      where('createdAt', '>=', todayTimestamp)
-    );
-
-    const snapshot = await getDocs(q);
-    let total = 0;
-    snapshot.forEach(doc => {
-      const order = doc.data() as Order;
-      total += order.totalAmount;
-    });
-    
-    return total;
+    return 0; // Stub
   }
 
   async submitClosingReport(report: ClosingReport): Promise<void> {

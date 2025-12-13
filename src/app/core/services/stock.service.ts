@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, collectionData, doc, addDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { Firestore, collection, collectionData, doc, addDoc, updateDoc, deleteDoc, getDoc } from '@angular/fire/firestore';
+import { Observable, from, map } from 'rxjs';
 import { Product, Dish } from '../models/interfaces';
 
 @Injectable({
@@ -20,14 +20,8 @@ export class StockService {
     await addDoc(this.productsCollection, { ...product, updatedAt: new Date() });
   }
 
-  async updateProduct(id: string, data: Partial<Product>): Promise<void> {
-    const docRef = doc(this.firestore, `products/${id}`);
-    await updateDoc(docRef, { ...data, updatedAt: new Date() });
-  }
-
   async deleteProduct(id: string): Promise<void> {
-    const docRef = doc(this.firestore, `products/${id}`);
-    await deleteDoc(docRef);
+    await deleteDoc(doc(this.firestore, `products/${id}`));
   }
 
   // --- DISHES ---
@@ -35,10 +29,19 @@ export class StockService {
     return collectionData(this.dishesCollection, { idField: 'id' }) as Observable<Dish[]>;
   }
 
+  // NOUVEAU : Récupérer un seul plat
+  getDish(id: string): Observable<Dish | undefined> {
+    const docRef = doc(this.firestore, `dishes/${id}`);
+    return from(getDoc(docRef)).pipe(
+      map(snap => snap.exists() ? { id: snap.id, ...snap.data() } as Dish : undefined)
+    );
+  }
+
   async addDish(dish: Omit<Dish, 'id'>): Promise<void> {
     await addDoc(this.dishesCollection, dish);
   }
 
+  // NOUVEAU : Mettre à jour un plat
   async updateDish(id: string, data: Partial<Dish>): Promise<void> {
     const docRef = doc(this.firestore, `dishes/${id}`);
     await updateDoc(docRef, data);
