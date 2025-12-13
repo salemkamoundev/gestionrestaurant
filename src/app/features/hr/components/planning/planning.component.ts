@@ -18,8 +18,8 @@ import { UserProfile } from '../../../../core/models/interfaces';
         <div>
           <h2 class="text-2xl font-bold text-gray-800">📅 Planning Interactif</h2>
           <div class="text-sm text-gray-500 flex gap-4 mt-1">
-             <span class="flex items-center gap-1">🖱️ <b>Glisser-déposer</b> pour déplacer</span>
-             <span class="flex items-center gap-1">👆 <b>Double-clic</b> pour modifier</span>
+             <span class="flex items-center gap-1">👀 Vue par défaut : <b>2 Semaines</b></span>
+             <span class="flex items-center gap-1">🖱️ <b>Scroll</b> pour zoomer/dézoomer</span>
           </div>
         </div>
         <div class="flex gap-2">
@@ -53,11 +53,10 @@ export class PlanningComponent implements AfterViewInit {
   employees: UserProfile[] = [];
   shifts: Shift[] = [];
 
-  // Modal State
   showModal = false;
   selectedDate = new Date();
   selectedUserId = '';
-  selectedShiftToEdit: Shift | null = null; // Pour le mode édition
+  selectedShiftToEdit: Shift | null = null;
 
   async ngAfterViewInit() {
     setTimeout(() => this.loadData(), 100);
@@ -87,34 +86,41 @@ export class PlanningComponent implements AfterViewInit {
       }))
     );
 
+    // CONFIGURATION DES DATES (C'est ici qu'on change la vue)
+    const today = new Date();
+    // On commence à minuit aujourd'hui pour être propre
+    today.setHours(0,0,0,0);
+    
+    const twoWeeksLater = new Date(today.getTime() + 1000 * 60 * 60 * 24 * 14); // +14 Jours
+
     const options = {
       stack: false,
-      start: new Date(), 
-      end: new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 3),
+      start: today,       // Début : Aujourd'hui
+      end: twoWeeksLater, // Fin : Dans 2 semaines
+      
       editable: {
-        add: false,    // Ajout via double-clic background (géré manuellement)
-        remove: true,  // Suppression via bouton croix
-        updateTime: true, // Permet le redimensionnement et le déplacement !
-        updateGroup: true // Permet de changer d'employé en glissant verticalement !
+        add: false,
+        remove: true,
+        updateTime: true,
+        updateGroup: true
       },
       orientation: 'top',
       locale: 'fr',
-      zoomMin: 1000 * 60 * 60 * 1, // 1h min
+      
+      // CONFIGURATION DU ZOOM
+      zoomMin: 1000 * 60 * 60 * 12,    // Zoom min : 12 heures (pour voir le détail)
+      zoomMax: 1000 * 60 * 60 * 24 * 31, // Zoom max : 31 jours (pour dézoomer assez large)
       
       onAdd: (item: any, callback: any) => { callback(null); },
 
-      // GESTION DU DRAG & DROP (Déplacement/Redimensionnement)
       onMove: async (item: any, callback: any) => {
-        // item contient les nouvelles dates start/end et le group (userId)
         const updatedShift = {
             start: new Date(item.start).toISOString(),
             end: new Date(item.end).toISOString(),
             userId: item.group
         };
-        
-        // Mise à jour Firestore directe
         await this.hrService.updateShift(item.id, updatedShift);
-        callback(item); // Valide le mouvement visuellement
+        callback(item);
       },
 
       onRemove: async (item: any, callback: any) => {
@@ -128,12 +134,14 @@ export class PlanningComponent implements AfterViewInit {
     };
 
     if (this.timeline) {
+      this.timeline.setOptions(options); // Mise à jour des options si existe déjà
       this.timeline.setData({ groups, items });
+      // Force le cadrage sur la fenêtre demandée
+      this.timeline.setWindow(today, twoWeeksLater);
     } else {
       this.timeline = new Timeline(this.container.nativeElement as HTMLElement, items, groups, options);
       
       this.timeline.on('doubleClick', (props: any) => {
-        // Cas 1 : Clic sur un shift existant -> ÉDITION
         if (props.item) {
           const shift = this.shifts.find(s => s.id === props.item);
           if (shift) {
@@ -141,11 +149,10 @@ export class PlanningComponent implements AfterViewInit {
             this.showModal = true;
           }
         } 
-        // Cas 2 : Clic dans le vide -> CRÉATION
         else if (props.what === 'background' || props.what === 'group-label') {
           this.selectedDate = props.snappedTime;
           this.selectedUserId = props.group;
-          this.selectedShiftToEdit = null; // Mode création
+          this.selectedShiftToEdit = null;
           this.showModal = true;
         }
       });
@@ -168,9 +175,8 @@ export class PlanningComponent implements AfterViewInit {
     this.showModal = false;
     const baseDateStr = formData.date;
 
-    // Si on est en mode édition d'un shift unique
     if (formData.isEdit && formData.originalId) {
-        const slot = formData.slots[0]; // On prend le premier (et seul) slot
+        const slot = formData.slots[0];
         const startDateTime = new Date(`${baseDateStr}T${slot.start}:00`);
         const endDateTime = new Date(`${baseDateStr}T${slot.end}:00`);
         
@@ -180,7 +186,6 @@ export class PlanningComponent implements AfterViewInit {
             end: endDateTime.toISOString()
         });
     } 
-    // Si on est en mode création (potentiellement multiple)
     else {
         for (const slot of formData.slots) {
             const startDateTime = new Date(`${baseDateStr}T${slot.start}:00`);

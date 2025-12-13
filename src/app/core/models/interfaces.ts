@@ -1,11 +1,13 @@
-export type UserRole = 'super_admin' | 'admin' | 'server';
+export type UserRole = 'super_admin' | 'admin' | 'server' | 'staff';
 
 export interface UserProfile {
   uid: string;
   email: string;
   displayName?: string;
   role: UserRole;
-  createdAt: Date;
+  jobTitle?: string;
+  phone?: string;
+  createdAt: Date | any;
 }
 
 export interface Product {
@@ -14,14 +16,14 @@ export interface Product {
   category: string;
   unit: 'kg' | 'l' | 'piece';
   quantity: number;
-  minThreshold: number; // Seuil d'alerte stock bas
-  costPrice: number;    // Prix d'achat
-  updatedAt: Date;
+  minThreshold: number; 
+  costPrice: number;    
+  updatedAt: Date | any;
 }
 
 export interface Ingredient {
-  productId: string; // Lien vers Product
-  quantity: number;  // Quantité nécessaire pour la recette
+  productId: string; 
+  quantity: number;  
 }
 
 export interface Dish {
@@ -31,7 +33,7 @@ export interface Dish {
   price: number;
   imageUrl?: string;
   category: 'starter' | 'main' | 'dessert' | 'drink';
-  ingredients: Ingredient[]; // Pour la déduction automatique du stock
+  ingredients: Ingredient[]; 
   isAvailable: boolean;
 }
 
@@ -45,12 +47,12 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
-  tableId: string; // ou 'takeaway'
+  tableId: string; 
   serverName: string;
   items: OrderItem[];
   totalAmount: number;
   status: 'open' | 'closed' | 'cancelled';
-  createdAt: any; // Timestamp Firestore
+  createdAt: any; 
   closedAt?: any;
 }
 
@@ -60,6 +62,7 @@ export interface Table {
   capacity: number;
   status: 'available' | 'occupied' | 'reserved';
   currentOrderId?: string;
+  paymentStatus?: 'pending' | 'paid'; // NOUVEAU CHAMP
 }
 
 export interface Expense {

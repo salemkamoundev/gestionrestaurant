@@ -4,84 +4,151 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { StockService } from '../../../../core/services/stock.service';
 import { OrderService } from '../../../../core/services/order.service';
 import { AuthService } from '../../../../core/services/auth.service';
-import { Observable } from 'rxjs';
-import { Dish, OrderItem, Order } from '../../../../core/models/interfaces';
+import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { Dish, OrderItem } from '../../../../core/models/interfaces';
 
 @Component({
   selector: 'app-order-interface',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="flex h-screen overflow-hidden bg-gray-50">
+    <div class="flex flex-col md:flex-row h-screen overflow-hidden bg-gray-50 relative">
       
-      <div class="w-2/3 flex flex-col border-r border-gray-200">
-        <div class="flex overflow-x-auto bg-white p-2 shadow-sm gap-2 no-scrollbar">
-          <button *ngFor="let cat of categories" 
-                  (click)="activeCategory = cat.id"
-                  [ngClass]="{'bg-indigo-600 text-white': activeCategory === cat.id, 'bg-gray-100 text-gray-600': activeCategory !== cat.id}"
-                  class="flex-shrink-0 px-6 py-4 rounded-lg font-bold text-lg transition-colors">
-            {{ cat.label }}
-          </button>
+      <div class="w-full md:w-2/3 flex flex-col border-r border-gray-200 h-full">
+        
+        <div class="md:hidden bg-white p-3 flex justify-between items-center shadow-sm z-10">
+           <button (click)="cancelOrder()" class="text-gray-500 text-sm">← Retour</button>
+           <span class="font-bold text-gray-800">
+             {{ tableNumber ? 'Table ' + tableNumber : 'À emporter' }}
+           </span>
+           <div class="w-10"></div> </div>
+
+        <div class="bg-white p-2 md:p-3 shadow-sm z-10 border-b border-gray-100">
+          <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1 px-1">
+            <button *ngFor="let cat of categories" 
+                    (click)="setCategory(cat.id)"
+                    [ngClass]="{
+                      'bg-indigo-600 text-white shadow-md transform scale-105': (activeCategory$ | async) === cat.id,
+                      'bg-gray-100 text-gray-600 hover:bg-gray-200': (activeCategory$ | async) !== cat.id
+                    }"
+                    class="flex-shrink-0 px-4 py-2 md:px-6 md:py-3 rounded-full font-bold text-xs md:text-sm transition-all duration-200 border border-transparent whitespace-nowrap">
+              {{ cat.label }}
+            </button>
+          </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-4 bg-gray-100">
-          <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
-            <ng-container *ngFor="let dish of dishes$ | async">
-              <button *ngIf="dish.category === activeCategory"
-                      (click)="addToCart(dish)"
-                      [disabled]="!dish.isAvailable"
-                      class="bg-white p-4 rounded-xl shadow h-32 flex flex-col justify-between items-start text-left active:scale-95 transition-transform disabled:opacity-50 disabled:bg-gray-200">
-                <span class="font-bold text-gray-800 text-lg leading-tight">{{ dish.name }}</span>
-                <span class="text-indigo-600 font-bold text-xl">{{ dish.price | currency:'EUR' }}</span>
-              </button>
-            </ng-container>
+        <div class="flex-1 overflow-y-auto p-2 md:p-4 bg-gray-100 pb-24 md:pb-4"> <div *ngIf="filteredDishes$ | async as dishes; else loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+            
+            <button *ngFor="let dish of dishes"
+                    (click)="addToCart(dish)"
+                    [disabled]="!dish.isAvailable"
+                    class="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-gray-100 h-28 md:h-32 flex flex-col justify-between items-start text-left active:scale-95 transition-transform hover:shadow-md disabled:opacity-50 disabled:bg-gray-50 relative overflow-hidden">
+              
+              <div class="w-full relative z-10">
+                <div class="flex justify-between items-start">
+                  <span class="font-bold text-gray-800 text-sm md:text-lg leading-tight line-clamp-2 pr-2">{{ dish.name }}</span>
+                </div>
+                <p class="hidden sm:block text-xs text-gray-400 mt-1 line-clamp-1">{{ dish.description }}</p>
+              </div>
+
+              <div class="flex justify-between items-end w-full relative z-10 mt-2">
+                 <span [ngClass]="dish.isAvailable ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50'" class="text-[10px] px-1 rounded uppercase font-bold tracking-wide">
+                    {{ dish.isAvailable ? 'Dispo' : 'Épuisé' }}
+                 </span>
+                 <span class="text-indigo-600 font-extrabold text-lg md:text-xl bg-indigo-50 px-2 py-0.5 rounded">
+                    {{ dish.price | currency:'EUR' }}
+                 </span>
+              </div>
+            </button>
+
+            <div *ngIf="dishes.length === 0" class="col-span-full flex flex-col items-center justify-center text-gray-400 py-10">
+              <span class="text-4xl mb-2">🍽️</span>
+              <p>Aucun plat ici.</p>
+            </div>
+
           </div>
+          
+          <ng-template #loading>
+            <div class="flex justify-center items-center h-full">
+              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            </div>
+          </ng-template>
         </div>
       </div>
 
-      <div class="w-1/3 flex flex-col bg-white shadow-xl z-10">
-        <div class="p-4 bg-indigo-900 text-white flex justify-between items-center">
-          <div>
+      <div *ngIf="cartItems.length > 0" 
+           class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20 flex justify-between items-center safe-area-bottom">
+        <div class="flex flex-col">
+          <span class="text-xs text-gray-500">{{ cartItems.length }} articles</span>
+          <span class="font-bold text-xl text-indigo-700">{{ totalAmount | currency:'EUR' }}</span>
+        </div>
+        <button (click)="openMobileCart()" 
+                class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-2">
+          <span>Voir Panier</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <div [ngClass]="{
+             'translate-y-full': !isMobileCartOpen, 
+             'translate-y-0': isMobileCartOpen
+           }"
+           class="fixed inset-0 z-30 bg-white transition-transform duration-300 md:translate-y-0 md:static md:w-1/3 md:flex md:flex-col shadow-2xl md:shadow-none flex flex-col h-full">
+        
+        <div class="p-4 bg-indigo-900 text-white flex justify-between items-center shadow-lg shrink-0">
+          <button (click)="closeMobileCart()" class="md:hidden mr-3 p-1 rounded-full hover:bg-white/20">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+             </svg>
+          </button>
+
+          <div class="flex-1">
             <h2 class="font-bold text-xl">Commande</h2>
-            <p class="text-indigo-200 text-sm">
+            <p class="text-indigo-200 text-xs uppercase tracking-wider font-semibold hidden md:block">
               {{ tableNumber ? 'Table ' + tableNumber : 'À emporter' }}
             </p>
           </div>
-          <button (click)="cancelOrder()" class="text-red-300 hover:text-white text-sm">Annuler</button>
+          <button (click)="cancelOrder()" class="bg-white/10 hover:bg-white/20 px-3 py-1 rounded text-xs transition">
+            Annuler
+          </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-2">
-          <div *ngFor="let item of cartItems; let i = index" class="flex justify-between items-center p-3 border-b border-gray-100">
+        <div class="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50">
+          <div *ngFor="let item of cartItems; let i = index" class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-lg shadow-sm">
             <div class="flex-1">
-              <div class="font-bold text-gray-800">{{ item.dishName }}</div>
-              <div class="text-xs text-gray-500">{{ item.price | currency:'EUR' }} x {{ item.quantity }}</div>
+              <div class="font-bold text-gray-800 text-sm">{{ item.dishName }}</div>
+              <div class="text-xs text-gray-500">{{ item.price | currency:'EUR' }}</div>
             </div>
-            <div class="flex items-center gap-3">
-              <button (click)="decrementQty(i)" class="w-8 h-8 rounded-full bg-gray-200 text-xl font-bold flex items-center justify-center">-</button>
-              <span class="font-bold w-4 text-center">{{ item.quantity }}</span>
-              <button (click)="incrementQty(i)" class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 text-xl font-bold flex items-center justify-center">+</button>
+            <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-200">
+              <button (click)="decrementQty(i)" class="w-8 h-8 rounded-md bg-white text-gray-600 shadow-sm border border-gray-200 font-bold hover:bg-red-50 hover:text-red-600 transition flex items-center justify-center">-</button>
+              <span class="font-bold w-6 text-center text-sm">{{ item.quantity }}</span>
+              <button (click)="incrementQty(i)" class="w-8 h-8 rounded-md bg-indigo-600 text-white shadow-md font-bold hover:bg-indigo-700 transition flex items-center justify-center">+</button>
             </div>
           </div>
           
-          <div *ngIf="cartItems.length === 0" class="h-full flex flex-col items-center justify-center text-gray-400">
-            <span class="text-4xl mb-2">🛒</span>
-            <p>Panier vide</p>
+          <div *ngIf="cartItems.length === 0" class="h-full flex flex-col items-center justify-center text-gray-300">
+            <span class="text-6xl mb-4 opacity-50">🛒</span>
+            <p class="font-medium">Panier vide</p>
           </div>
         </div>
 
-        <div class="p-4 bg-gray-50 border-t border-gray-200">
-          <div class="flex justify-between items-center mb-4 text-2xl font-bold text-gray-800">
-            <span>Total</span>
-            <span>{{ totalAmount | currency:'EUR' }}</span>
+        <div class="p-4 bg-white border-t border-gray-200 shrink-0 safe-area-bottom">
+          <div class="flex justify-between items-center mb-4 text-gray-800">
+            <span class="text-lg">Total</span>
+            <span class="text-3xl font-extrabold text-indigo-700">{{ totalAmount | currency:'EUR' }}</span>
           </div>
           
           <button (click)="validateOrder()" 
                   [disabled]="cartItems.length === 0"
-                  class="w-full bg-green-600 hover:bg-green-700 text-white text-xl font-bold py-4 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform flex justify-center items-center gap-2">
-            <span>✅ Valider & Payer</span>
+                  class="w-full bg-green-600 hover:bg-green-700 text-white text-lg font-bold py-4 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform flex justify-center items-center gap-2">
+            <span>✅ Valider</span>
           </button>
         </div>
       </div>
+
     </div>
   `
 })
@@ -92,20 +159,33 @@ export class OrderInterfaceComponent implements OnInit {
   route = inject(ActivatedRoute);
   router = inject(Router);
 
-  dishes$: Observable<Dish[]> = this.stockService.getDishes();
-  
   categories = [
+    { id: 'all', label: 'Tout' },
     { id: 'starter', label: 'Entrées' },
     { id: 'main', label: 'Plats' },
     { id: 'dessert', label: 'Desserts' },
     { id: 'drink', label: 'Boissons' }
   ];
-  activeCategory = 'main';
+
+  activeCategory$ = new BehaviorSubject<string>('all');
+  
+  filteredDishes$: Observable<Dish[]> = combineLatest([
+    this.stockService.getDishes(),
+    this.activeCategory$
+  ]).pipe(
+    map(([dishes, category]) => {
+      if (category === 'all') return dishes;
+      return dishes.filter(d => d.category === category);
+    })
+  );
 
   tableId: string | null = null;
   tableNumber: string | null = null;
   cartItems: OrderItem[] = [];
-  serverName = 'Serveur'; // Idéalement récupéré via AuthService
+  serverName = 'Serveur';
+  
+  // NOUVEAU: État du panier mobile
+  isMobileCartOpen = false;
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
@@ -116,6 +196,10 @@ export class OrderInterfaceComponent implements OnInit {
     this.authService.getUserProfile().then(user => {
       if(user) this.serverName = user.displayName || 'Staff';
     });
+  }
+
+  setCategory(catId: string) {
+    this.activeCategory$.next(catId);
   }
 
   addToCart(dish: Dish) {
@@ -142,6 +226,10 @@ export class OrderInterfaceComponent implements OnInit {
       this.cartItems[index].quantity--;
     } else {
       this.cartItems.splice(index, 1);
+      // Si le panier devient vide sur mobile, on le ferme peut-être ?
+      if (this.cartItems.length === 0) {
+        this.isMobileCartOpen = false;
+      }
     }
   }
 
@@ -157,16 +245,12 @@ export class OrderInterfaceComponent implements OnInit {
       serverName: this.serverName,
       items: this.cartItems,
       totalAmount: this.totalAmount,
-      status: 'closed' // On valide directement pour l'exemple
+      status: 'closed' // Simplification pour le demo
     };
 
     try {
-      // 1. Création de la commande
       const orderId = await this.orderService.createOrder(order);
-      
-      // 2. Validation et déduction du stock (Logique demandée)
       await this.orderService.validateOrder(orderId, order);
-      
       alert('Commande validée !');
       this.router.navigate(['/pos/tables']);
     } catch (error) {
@@ -177,5 +261,14 @@ export class OrderInterfaceComponent implements OnInit {
 
   cancelOrder() {
     this.router.navigate(['/pos/tables']);
+  }
+
+  // --- Gestion Mobile ---
+  openMobileCart() {
+    this.isMobileCartOpen = true;
+  }
+
+  closeMobileCart() {
+    this.isMobileCartOpen = false;
   }
 }

@@ -1,412 +1,384 @@
 #!/bin/bash
 
 # ==========================================
-# SETUP: DISH EDIT MODE
+# UPDATE: TABLE STATUS & PAYMENT FLAGS
 # ==========================================
 
 set -e
 
-echo "🍽️ Activation de la modification des Plats..."
+echo "🚩 Ajout de la gestion Statut & Paiement sur les tables..."
 
-# 1. Mise à jour du StockService (Ajout de getDish)
-echo "SERVICE: Updating StockService..."
-cat <<'EOF' > src/app/core/services/stock.service.ts
-import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, collectionData, doc, addDoc, updateDoc, deleteDoc, getDoc } from '@angular/fire/firestore';
-import { Observable, from, map } from 'rxjs';
-import { Product, Dish } from '../models/interfaces';
+# 1. Mise à jour de l'interface (Ajout de paymentStatus)
+cat <<'EOF' > src/app/core/models/interfaces.ts
+export type UserRole = 'super_admin' | 'admin' | 'server' | 'staff';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class StockService {
-  private firestore = inject(Firestore);
-  private productsCollection = collection(this.firestore, 'products');
-  private dishesCollection = collection(this.firestore, 'dishes');
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName?: string;
+  role: UserRole;
+  jobTitle?: string;
+  phone?: string;
+  createdAt: Date | any;
+}
 
-  // --- PRODUCTS ---
-  getProducts(): Observable<Product[]> {
-    return collectionData(this.productsCollection, { idField: 'id' }) as Observable<Product[]>;
-  }
+export interface Product {
+  id: string;
+  name: string;
+  category: string;
+  unit: 'kg' | 'l' | 'piece';
+  quantity: number;
+  minThreshold: number; 
+  costPrice: number;    
+  updatedAt: Date | any;
+}
 
-  async addProduct(product: Omit<Product, 'id'>): Promise<void> {
-    await addDoc(this.productsCollection, { ...product, updatedAt: new Date() });
-  }
+export interface Ingredient {
+  productId: string; 
+  quantity: number;  
+}
 
-  async deleteProduct(id: string): Promise<void> {
-    await deleteDoc(doc(this.firestore, `products/${id}`));
-  }
+export interface Dish {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  imageUrl?: string;
+  category: 'starter' | 'main' | 'dessert' | 'drink';
+  ingredients: Ingredient[]; 
+  isAvailable: boolean;
+}
 
-  // --- DISHES ---
-  getDishes(): Observable<Dish[]> {
-    return collectionData(this.dishesCollection, { idField: 'id' }) as Observable<Dish[]>;
-  }
+export interface OrderItem {
+  dishId: string;
+  dishName: string;
+  quantity: number;
+  price: number;
+  status: 'pending' | 'cooking' | 'served';
+}
 
-  // NOUVEAU : Récupérer un seul plat
-  getDish(id: string): Observable<Dish | undefined> {
-    const docRef = doc(this.firestore, `dishes/${id}`);
-    return from(getDoc(docRef)).pipe(
-      map(snap => snap.exists() ? { id: snap.id, ...snap.data() } as Dish : undefined)
-    );
-  }
+export interface Order {
+  id: string;
+  tableId: string; 
+  serverName: string;
+  items: OrderItem[];
+  totalAmount: number;
+  status: 'open' | 'closed' | 'cancelled';
+  createdAt: any; 
+  closedAt?: any;
+}
 
-  async addDish(dish: Omit<Dish, 'id'>): Promise<void> {
-    await addDoc(this.dishesCollection, dish);
-  }
+export interface Table {
+  id: string;
+  number: string;
+  capacity: number;
+  status: 'available' | 'occupied' | 'reserved';
+  currentOrderId?: string;
+  paymentStatus?: 'pending' | 'paid'; // NOUVEAU CHAMP
+}
 
-  // NOUVEAU : Mettre à jour un plat
-  async updateDish(id: string, data: Partial<Dish>): Promise<void> {
-    const docRef = doc(this.firestore, `dishes/${id}`);
-    await updateDoc(docRef, data);
-  }
+export interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  category: 'salary' | 'rent' | 'purchase' | 'utilities' | 'other';
+  date: any;
+  createdBy: string;
+}
 
-  async deleteDish(id: string): Promise<void> {
-    const docRef = doc(this.firestore, `dishes/${id}`);
-    await deleteDoc(docRef);
-  }
+export interface Invoice {
+  id: string;
+  orderId: string;
+  amount: number;
+  paymentMethod: 'cash' | 'card' | 'check';
+  date: any;
 }
 EOF
 
-# 2. Mise à jour de DishListComponent (Bouton Modifier)
-echo "COMPONENT: Updating DishListComponent..."
-cat <<'EOF' > src/app/features/dishes/components/dish-list/dish-list.component.ts
+# 2. Mise à jour du TableGridComponent
+# Ajout de la logique "Modale d'action" et des indicateurs visuels
+cat <<'EOF' > src/app/features/pos/components/table-grid/table-grid.component.ts
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { StockService } from '../../../../core/services/stock.service';
-import { Observable } from 'rxjs';
-import { Dish } from '../../../../core/models/interfaces';
+import { Router } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { OrderService } from '../../../../core/services/order.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { Observable, map } from 'rxjs';
+import { Table, UserProfile } from '../../../../core/models/interfaces';
 
 @Component({
-  selector: 'app-dish-list',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
-    <div class="p-6 bg-white rounded-lg shadow-md">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">🍽️ Gestion du Menu</h2>
-        <a routerLink="/dishes/new" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md shadow flex items-center gap-2">
-          <span>+ Créer une recette</span>
-        </a>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div *ngFor="let dish of dishes$ | async" class="border rounded-lg p-4 shadow-sm hover:shadow-md transition bg-gray-50 flex flex-col justify-between">
-          
-          <div>
-            <div class="flex justify-between items-start">
-              <h3 class="text-lg font-bold text-gray-900">{{ dish.name }}</h3>
-              <span [ngClass]="{'bg-green-100 text-green-800': dish.isAvailable, 'bg-red-100 text-red-800': !dish.isAvailable}" class="px-2 py-1 text-xs rounded-full">
-                {{ dish.isAvailable ? 'En vente' : 'Indisponible' }}
-              </span>
-            </div>
-            <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ dish.description || 'Pas de description' }}</p>
-            <div class="mt-2 text-xs text-gray-400">
-               {{ dish.ingredients ? dish.ingredients.length : 0 }} Ingrédient(s)
-            </div>
-          </div>
-
-          <div class="mt-4 pt-4 border-t flex justify-between items-center">
-            <span class="text-xl font-bold text-indigo-600">{{ dish.price | currency:'EUR' }}</span>
-            
-            <div class="flex gap-3">
-              <a [routerLink]="['/dishes/edit', dish.id]" class="text-indigo-600 hover:text-indigo-900 font-medium text-sm flex items-center gap-1">
-                ✏️ Modifier
-              </a>
-              <button (click)="deleteDish(dish.id)" class="text-red-500 hover:text-red-700 font-medium text-sm">
-                🗑️
-              </button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  `
-})
-export class DishListComponent {
-  stockService = inject(StockService);
-  dishes$: Observable<Dish[]> = this.stockService.getDishes();
-
-  deleteDish(id: string) {
-    if(confirm('Voulez-vous vraiment supprimer ce plat du menu ?')) {
-      this.stockService.deleteDish(id);
-    }
-  }
-}
-EOF
-
-# 3. Mise à jour de DishFormComponent (Logique d'édition)
-echo "COMPONENT: Updating DishFormComponent..."
-cat <<'EOF' > src/app/features/dishes/components/dish-form/dish-form.component.ts
-import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
-import { StockService } from '../../../../core/services/stock.service';
-import { Observable } from 'rxjs';
-import { Product, Dish } from '../../../../core/models/interfaces';
-
-@Component({
-  selector: 'app-dish-form',
+  selector: 'app-table-grid',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md mt-10">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">
-          {{ isEditMode ? 'Modifier la recette' : 'Créer une nouvelle recette' }}
-        </h2>
-        <span *ngIf="isEditMode" class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">Mode Édition</span>
-      </div>
+    <div class="p-6 bg-gray-50 min-h-screen">
       
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Nom du plat</label>
-            <input formControlName="name" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Prix de vente (€)</label>
-            <input formControlName="price" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
-          </div>
-        </div>
-
+      <div class="flex justify-between items-center mb-8">
         <div>
-           <label class="block text-sm font-medium text-gray-700">Catégorie</label>
-           <select formControlName="category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
-             <option value="starter">Entrée</option>
-             <option value="main">Plat principal</option>
-             <option value="dessert">Dessert</option>
-             <option value="drink">Boisson</option>
-           </select>
+          <h2 class="text-3xl font-bold text-gray-800">Salle & Tables</h2>
+          <p class="text-gray-500">Gérez l'occupation et les paiements</p>
         </div>
 
-        <div>
-           <label class="block text-sm font-medium text-gray-700">Description</label>
-           <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></textarea>
+        <div *ngIf="canEdit$ | async" class="flex items-center gap-3 bg-white px-4 py-2 rounded-lg shadow-sm border">
+          <span class="text-sm font-medium text-gray-700">Mode Édition</span>
+          <button (click)="toggleEditMode()" 
+                  [ngClass]="isEditMode ? 'bg-indigo-600' : 'bg-gray-200'"
+                  class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none">
+            <span [ngClass]="isEditMode ? 'translate-x-5' : 'translate-x-0'"
+                  class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200"></span>
+          </button>
         </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
         
-        <div class="border-t pt-4 mt-4">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-900">Ingrédients (Stock)</h3>
-            <button type="button" (click)="addIngredient()" class="text-sm bg-blue-50 text-blue-600 px-3 py-1 rounded hover:bg-blue-100">
-              + Ajouter un ingrédient
-            </button>
-          </div>
+        <button *ngIf="isEditMode" (click)="openModal()" 
+                class="h-40 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col justify-center items-center text-gray-400 hover:border-indigo-500 hover:text-indigo-500 hover:bg-white transition bg-gray-50">
+           <span class="text-4xl mb-2">+</span>
+           <span class="font-medium">Ajouter Table</span>
+        </button>
 
-          <div formArrayName="ingredients" class="space-y-3">
-            <div *ngFor="let ingredient of ingredients.controls; let i=index" [formGroup]="getIngredientFormGroup(i)" class="flex gap-4 items-end bg-gray-50 p-3 rounded">
+        <div *ngFor="let table of tables$ | async" class="relative group">
+          
+          <button *ngIf="isEditMode" (click)="deleteTable(table.id)"
+                  class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md z-10 hover:bg-red-600 transform hover:scale-110 transition">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+             </svg>
+          </button>
+
+          <button (click)="onTableClick(table)"
+                  [ngClass]="{
+                    'bg-white border-gray-200 hover:border-indigo-500 hover:shadow-md': table.status === 'available',
+                    'bg-red-50 border-red-200': table.status === 'occupied' && (!table.paymentStatus || table.paymentStatus === 'pending'),
+                    'bg-green-50 border-green-200': table.status === 'occupied' && table.paymentStatus === 'paid',
+                    'ring-2 ring-indigo-500 ring-offset-2': isEditMode
+                  }"
+                  class="w-full h-40 rounded-2xl border-2 flex flex-col justify-center items-center shadow-sm transition-all duration-200 relative overflow-hidden">
+            
+            <div [ngClass]="{
+              'bg-green-500': table.status === 'available',
+              'bg-red-500': table.status === 'occupied' && (!table.paymentStatus || table.paymentStatus === 'pending'),
+              'bg-blue-500': table.status === 'occupied' && table.paymentStatus === 'paid',
+              'bg-yellow-500': table.status === 'reserved'
+            }" class="absolute top-4 left-4 w-3 h-3 rounded-full animate-pulse"></div>
+
+            <div *ngIf="table.status === 'occupied' && table.paymentStatus === 'paid'" 
+                 class="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-bl-lg shadow-sm z-10">
+               💰 PAYÉ
+            </div>
+
+             <div *ngIf="table.status === 'occupied' && (!table.paymentStatus || table.paymentStatus === 'pending')" 
+                 class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-bl-lg shadow-sm z-10">
+               ⏳ EN COURS
+            </div>
+
+            <span class="text-3xl font-extrabold text-gray-800">
+               {{ table.number }}
+            </span>
+            
+            <div class="flex items-center gap-1 mt-2 text-gray-400 text-sm">
+               <span>👥</span>
+               <span>{{ table.capacity }} pers.</span>
+            </div>
+
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="!isEditMode" class="mt-12 border-t pt-8">
+         <button (click)="goToTakeaway()" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl shadow-lg font-bold text-lg flex items-center justify-center gap-3">
+            <span>🛍️</span> Commande à emporter
+         </button>
+      </div>
+
+      <div *ngIf="actionTable" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+          <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" (click)="closeActionModal()"></div>
+
+          <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+          <div class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+            
+            <div class="bg-gray-800 px-4 py-3 sm:px-6">
+              <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                Table {{ actionTable.number }}
+                <span class="text-xs font-normal bg-gray-600 px-2 py-1 rounded">{{ actionTable.status | uppercase }}</span>
+              </h3>
+            </div>
+
+            <div class="p-6 space-y-3">
               
-              <div class="flex-grow">
-                <label class="block text-xs font-medium text-gray-500 mb-1">Produit</label>
-                <select formControlName="productId" class="block w-full rounded-md border-gray-300 shadow-sm text-sm p-2 border">
-                  <option value="" disabled>Choisir...</option>
-                  <option *ngFor="let p of products$ | async" [value]="p.id">
-                    {{ p.name }} ({{ p.unit }})
-                  </option>
-                </select>
-              </div>
+              <button (click)="goToOrder(actionTable)" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg flex justify-center items-center gap-2">
+                 📝 Voir / Modifier la commande
+              </button>
 
-              <div class="w-32">
-                <label class="block text-xs font-medium text-gray-500 mb-1">Qté</label>
-                <input formControlName="quantity" type="number" class="block w-full rounded-md border-gray-300 shadow-sm text-sm p-2 border">
-              </div>
+              <div class="border-t my-2"></div>
 
-              <button type="button" (click)="removeIngredient(i)" class="text-red-500 hover:text-red-700 p-2">
-                🗑️
+              <button *ngIf="actionTable.status === 'occupied' && actionTable.paymentStatus !== 'paid'" 
+                      (click)="markAsPaid(actionTable)" 
+                      class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg flex justify-center items-center gap-2">
+                 💰 Marquer comme Payé
+              </button>
+
+              <button *ngIf="actionTable.status === 'occupied' && actionTable.paymentStatus === 'paid'" 
+                      (click)="markAsPending(actionTable)" 
+                      class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-lg flex justify-center items-center gap-2">
+                 ↩️ Annuler paiement
+              </button>
+
+              <button (click)="freeTable(actionTable)" 
+                      class="w-full bg-white border-2 border-red-500 text-red-600 hover:bg-red-50 font-bold py-3 rounded-lg flex justify-center items-center gap-2 mt-4">
+                 🧹 Libérer la table (Terminer)
+              </button>
+
+            </div>
+
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <button type="button" (click)="closeActionModal()" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:ml-3 sm:w-auto sm:text-sm">
+                Fermer
               </button>
             </div>
           </div>
-          
-          <div *ngIf="ingredients.length === 0" class="text-center text-gray-400 py-4 italic text-sm">
-            Aucun ingrédient défini.
+        </div>
+      </div>
+
+
+      <div *ngIf="showModal" class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+          <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeModal()"></div>
+          <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+          <div class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-indigo-700 px-4 py-3 sm:px-6">
+              <h3 class="text-lg leading-6 font-medium text-white">
+                {{ editingTableId ? 'Modifier la table' : 'Nouvelle table' }}
+              </h3>
+            </div>
+            <form [formGroup]="tableForm" (ngSubmit)="onSubmit()" class="px-4 pt-5 pb-4 sm:p-6">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Numéro</label>
+                  <input type="text" formControlName="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                </div>
+                <div>
+                   <label class="block text-sm font-medium text-gray-700">Capacité</label>
+                   <input type="number" formControlName="capacity" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                </div>
+              </div>
+              <div class="mt-6 flex justify-end gap-3">
+                <button type="button" (click)="closeModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Annuler</button>
+                <button type="submit" [disabled]="tableForm.invalid" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50">Enregistrer</button>
+              </div>
+            </form>
           </div>
         </div>
+      </div>
 
-        <div class="flex items-center gap-2 bg-gray-50 p-3 rounded">
-           <input type="checkbox" formControlName="isAvailable" id="avail" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
-           <label for="avail" class="ml-2 block text-sm text-gray-900">Plat disponible à la vente</label>
-        </div>
-
-        <div class="flex justify-end pt-4 border-t gap-3">
-          <button type="button" (click)="cancel()" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
-             Annuler
-          </button>
-          <button type="submit" [disabled]="form.invalid" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50">
-             {{ isEditMode ? 'Mettre à jour' : 'Créer le plat' }}
-          </button>
-        </div>
-      </form>
     </div>
   `
 })
-export class DishFormComponent implements OnInit {
-  fb = inject(FormBuilder);
-  stockService = inject(StockService);
+export class TableGridComponent {
+  orderService = inject(OrderService);
+  authService = inject(AuthService);
   router = inject(Router);
-  route = inject(ActivatedRoute); // Pour lire l'ID dans l'URL
-  
-  products$: Observable<Product[]> = this.stockService.getProducts();
+  fb = inject(FormBuilder);
+
+  tables$: Observable<Table[]> = this.orderService.getTables();
+  canEdit$: Observable<boolean> = this.authService.user$.pipe(map(u => u?.role === 'admin' || u?.role === 'super_admin'));
 
   isEditMode = false;
-  dishId: string | null = null;
+  showModal = false;
+  editingTableId: string | null = null;
+  
+  // Table sélectionnée pour l'action (Occupée)
+  actionTable: Table | null = null;
 
-  form: FormGroup = this.fb.group({
-    name: ['', Validators.required],
-    description: [''],
-    price: [0, [Validators.required, Validators.min(0)]],
-    category: ['main', Validators.required],
-    ingredients: this.fb.array([]),
-    isAvailable: [true]
+  tableForm = this.fb.group({
+    number: ['', Validators.required],
+    capacity: [4, [Validators.required, Validators.min(1)]]
   });
 
-  get ingredients() {
-    return this.form.get('ingredients') as FormArray;
-  }
+  toggleEditMode() { this.isEditMode = !this.isEditMode; }
 
-  getIngredientFormGroup(index: number): FormGroup {
-    return this.ingredients.at(index) as FormGroup;
-  }
-
-  ngOnInit() {
-    // Vérifier si on est en mode édition
-    this.dishId = this.route.snapshot.paramMap.get('id');
-    
-    if (this.dishId) {
-      this.isEditMode = true;
-      this.loadDish(this.dishId);
+  onTableClick(table: Table) {
+    if (this.isEditMode) {
+      // MODE EDITION
+      this.editingTableId = table.id;
+      this.tableForm.patchValue({ number: table.number, capacity: table.capacity });
+      this.showModal = true;
     } else {
-      // Mode création : on ajoute une ligne vide par défaut
-      this.addIngredient();
-    }
-  }
-
-  loadDish(id: string) {
-    this.stockService.getDish(id).subscribe(dish => {
-      if (dish) {
-        // Patch des champs simples
-        this.form.patchValue({
-          name: dish.name,
-          description: dish.description,
-          price: dish.price,
-          category: dish.category,
-          isAvailable: dish.isAvailable
-        });
-
-        // Patch des ingrédients (Array)
-        this.ingredients.clear(); // On vide d'abord
-        if (dish.ingredients && dish.ingredients.length > 0) {
-          dish.ingredients.forEach(ing => {
-            this.addIngredient(ing.productId, ing.quantity);
-          });
-        }
-      }
-    });
-  }
-
-  addIngredient(productId = '', quantity = 1) {
-    const ingredientGroup = this.fb.group({
-      productId: [productId, Validators.required],
-      quantity: [quantity, [Validators.required, Validators.min(0.01)]]
-    });
-    this.ingredients.push(ingredientGroup);
-  }
-
-  removeIngredient(index: number) {
-    this.ingredients.removeAt(index);
-  }
-
-  async onSubmit() {
-    if (this.form.valid) {
-      const dishData = this.form.value as any;
-      
-      if (this.isEditMode && this.dishId) {
-        await this.stockService.updateDish(this.dishId, dishData);
+      // MODE SERVICE
+      if (table.status === 'available') {
+        // Nouvelle commande -> On va directement à la caisse
+        this.goToOrder(table);
       } else {
-        await this.stockService.addDish(dishData);
+        // Table occupée -> On ouvre la modale d'action (Payer / Libérer)
+        this.actionTable = table;
       }
-      
-      this.router.navigate(['/dishes']);
     }
   }
 
-  cancel() {
-    this.router.navigate(['/dishes']);
+  // --- ACTIONS MODAL ---
+  closeActionModal() { this.actionTable = null; }
+
+  goToOrder(table: Table) {
+    this.router.navigate(['/pos/order'], { queryParams: { tableId: table.id, tableNumber: table.number } });
+    this.closeActionModal();
+  }
+
+  async markAsPaid(table: Table) {
+    if(confirm('Marquer cette table comme PAYÉE ?')) {
+      await this.orderService.updateTable(table.id, { paymentStatus: 'paid' });
+      this.closeActionModal();
+    }
+  }
+
+  async markAsPending(table: Table) {
+    await this.orderService.updateTable(table.id, { paymentStatus: 'pending' });
+    this.closeActionModal();
+  }
+
+  async freeTable(table: Table) {
+    if(confirm('Libérer la table ? (Cela clôturera la session de table)')) {
+      await this.orderService.updateTable(table.id, { 
+        status: 'available', 
+        paymentStatus: 'pending', // Reset
+        currentOrderId: '' // Reset
+      });
+      this.closeActionModal();
+    }
+  }
+
+  // --- CRUD TABLES ---
+  openModal() {
+    this.editingTableId = null;
+    this.tableForm.reset({ capacity: 4 });
+    this.showModal = true;
+  }
+  closeModal() { this.showModal = false; this.editingTableId = null; }
+  
+  async onSubmit() {
+    if (this.tableForm.valid) {
+      const data = this.tableForm.value as any;
+      if (this.editingTableId) await this.orderService.updateTable(this.editingTableId, data);
+      else await this.orderService.addTable({ ...data, status: 'available' });
+      this.closeModal();
+    }
+  }
+  async deleteTable(id: string) {
+    if (confirm('Supprimer cette table ?')) await this.orderService.deleteTable(id);
+  }
+  goToTakeaway() {
+    this.router.navigate(['/pos/order'], { queryParams: { tableId: 'takeaway' } });
   }
 }
 EOF
 
-# 4. Mise à jour des Routes (app.routes.ts)
-echo "ROUTING: Adding Edit Route..."
-# On utilise une substitution simple avec sed pour ajouter la route edit avant la fin du tableau
-# NOTE: Cette méthode est plus sûre que d'écraser tout le fichier si tu as fait des modifs manuelles,
-# mais ici, par sécurité et cohérence, je réécris le bloc des routes 'dishes' complet.
-
-cat <<'EOF' > src/app/app.routes.ts
-import { Routes } from '@angular/router';
-import { roleGuard } from './core/guards/role.guard';
-
-import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
-import { LoginComponent } from './features/auth/login/login.component';
-import { DashboardComponent } from './features/dashboard/dashboard.component';
-import { StockListComponent } from './features/stock/components/stock-list/stock-list.component';
-import { ProductFormComponent } from './features/stock/components/product-form/product-form.component';
-import { DishListComponent } from './features/dishes/components/dish-list/dish-list.component';
-import { DishFormComponent } from './features/dishes/components/dish-form/dish-form.component';
-import { TableGridComponent } from './features/pos/components/table-grid/table-grid.component';
-import { OrderInterfaceComponent } from './features/pos/components/order-interface/order-interface.component';
-import { EmployeeListComponent } from './features/hr/components/employee-list/employee-list.component';
-import { PlanningComponent } from './features/hr/components/planning/planning.component';
-import { ShiftClosingComponent } from './features/hr/components/shift-closing/shift-closing.component';
-import { ExpenseListComponent } from './features/finance/components/expense-list/expense-list.component';
-
-export const routes: Routes = [
-  { path: 'login', component: LoginComponent },
-
-  {
-    path: '',
-    component: MainLayoutComponent,
-    canActivate: [roleGuard],
-    children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      
-      { 
-        path: 'dashboard', 
-        component: DashboardComponent, 
-        data: { roles: ['super_admin', 'admin', 'server'] } 
-      },
-
-      // STOCK
-      { path: 'stock', component: StockListComponent, data: { roles: ['super_admin', 'admin'] } },
-      { path: 'stock/new', component: ProductFormComponent, data: { roles: ['super_admin', 'admin'] } },
-      
-      // DISHES (Updated)
-      { path: 'dishes', component: DishListComponent, data: { roles: ['super_admin', 'admin'] } },
-      { path: 'dishes/new', component: DishFormComponent, data: { roles: ['super_admin', 'admin'] } },
-      // ROUTE EDITION AJOUTÉE :
-      { path: 'dishes/edit/:id', component: DishFormComponent, data: { roles: ['super_admin', 'admin'] } },
-
-      // POS
-      { path: 'pos/tables', component: TableGridComponent, data: { roles: ['super_admin', 'admin', 'server'] } },
-      { path: 'pos/order', component: OrderInterfaceComponent, data: { roles: ['super_admin', 'admin', 'server'] } },
-
-      // HR
-      { path: 'hr/employees', component: EmployeeListComponent, data: { roles: ['super_admin', 'admin'] } },
-      { path: 'hr/planning', component: PlanningComponent, data: { roles: ['super_admin', 'admin', 'server'] } },
-      { path: 'hr/closing', component: ShiftClosingComponent, data: { roles: ['super_admin', 'admin', 'server'] } },
-
-      // FINANCE
-      { path: 'finance/expenses', component: ExpenseListComponent, data: { roles: ['super_admin', 'admin'] } },
-    ]
-  },
-  { path: '**', redirectTo: 'dashboard' }
-];
-EOF
-
-echo "✅ Édition des Plats activée."
+echo "✅ Gestion Statut & Paiement activée."
 echo "👉 Instructions :"
-echo "1. Lance 'ng serve'."
-echo "2. Va dans 'Menu'."
-echo "3. Clique sur 'Modifier' (icône crayon) sur un plat existant."
+echo "   1. Clique sur une table libre pour commander."
+echo "   2. La table devient 'EN COURS' (Rouge)."
+echo "   3. Clique sur la table occupée : Une modale s'ouvre."
+echo "   4. Clique sur 'Marquer comme Payé' : Elle devient 'PAYÉ' (Verte avec drapeau)."
+echo "   5. Quand les clients partent, clique sur 'Libérer la table'."

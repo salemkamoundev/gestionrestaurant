@@ -11,6 +11,7 @@ import { DishFormComponent } from './features/dishes/components/dish-form/dish-f
 import { TableGridComponent } from './features/pos/components/table-grid/table-grid.component';
 import { OrderInterfaceComponent } from './features/pos/components/order-interface/order-interface.component';
 import { EmployeeListComponent } from './features/hr/components/employee-list/employee-list.component';
+import { EmployeeFormComponent } from './features/hr/components/employee-form/employee-form.component'; // NOUVEAU
 import { PlanningComponent } from './features/hr/components/planning/planning.component';
 import { ShiftClosingComponent } from './features/hr/components/shift-closing/shift-closing.component';
 import { ExpenseListComponent } from './features/finance/components/expense-list/expense-list.component';
@@ -35,10 +36,9 @@ export const routes: Routes = [
       { path: 'stock', component: StockListComponent, data: { roles: ['super_admin', 'admin'] } },
       { path: 'stock/new', component: ProductFormComponent, data: { roles: ['super_admin', 'admin'] } },
       
-      // DISHES (Updated)
+      // DISHES
       { path: 'dishes', component: DishListComponent, data: { roles: ['super_admin', 'admin'] } },
       { path: 'dishes/new', component: DishFormComponent, data: { roles: ['super_admin', 'admin'] } },
-      // ROUTE EDITION AJOUTÉE :
       { path: 'dishes/edit/:id', component: DishFormComponent, data: { roles: ['super_admin', 'admin'] } },
 
       // POS
@@ -47,6 +47,10 @@ export const routes: Routes = [
 
       // HR
       { path: 'hr/employees', component: EmployeeListComponent, data: { roles: ['super_admin', 'admin'] } },
+      // ROUTES EMPLOYÉS AJOUTÉES :
+      { path: 'hr/employees/new', component: EmployeeFormComponent, data: { roles: ['super_admin', 'admin'] } },
+      { path: 'hr/employees/edit/:id', component: EmployeeFormComponent, data: { roles: ['super_admin', 'admin'] } },
+      
       { path: 'hr/planning', component: PlanningComponent, data: { roles: ['super_admin', 'admin', 'server'] } },
       { path: 'hr/closing', component: ShiftClosingComponent, data: { roles: ['super_admin', 'admin', 'server'] } },
 
