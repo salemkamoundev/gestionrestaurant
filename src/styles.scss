@@ -4,3 +4,18 @@
 
 /* Autres styles globaux ici */
 html, body { height: 100%; }
+
+/* Styles Vis-Timeline */
+@import 'vis-timeline/styles/vis-timeline-graph2d.min.css';
+
+.vis-item {
+  border-color: #4f46e5;
+  background-color: #e0e7ff;
+  color: #3730a3;
+  font-size: 14px;
+}
+.vis-item.vis-selected {
+  background-color: #4f46e5;
+  color: white;
+  border-color: #312e81;
+}
