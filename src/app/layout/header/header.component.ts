@@ -17,7 +17,8 @@ import { UserProfile } from '../../core/models/interfaces';
     <aside class="fixed inset-y-0 left-0 z-30 w-64 bg-indigo-900 text-white transition-transform duration-300 ease-in-out transform flex flex-col shadow-2xl font-sans"
            [ngClass]="isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'">
       
-      <div class="flex items-center justify-center h-16 bg-indigo-950 border-b border-indigo-800 shadow-sm shrink-0">
+      <div class="flex items-center justify-center h-16 bg-indigo-950 border-b 
+border-indigo-800 shadow-sm shrink-0">
         <span class="text-3xl mr-2">👨‍🍳</span>
         <span class="text-xl font-bold tracking-wider">RestoManager</span>
       </div>
@@ -39,7 +40,13 @@ import { UserProfile } from '../../core/models/interfaces';
            class="flex items-center px-4 py-2 text-sm font-medium hover:bg-indigo-800 transition-all mb-1">
            <span class="mr-3 text-xl">🪑</span> Salle & Tables
         </a>
-
+        
+        <a routerLink="/pos/history" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+           (click)="closeMenu.emit()" 
+           class="flex items-center px-4 py-2 text-sm font-medium hover:bg-indigo-800 transition-all mb-1">
+           <span class="mr-3 text-xl">📜</span> Historique des Commandes
+        </a>
+        
         <div class="px-4 mt-6 mb-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider">
           Administration
         </div>

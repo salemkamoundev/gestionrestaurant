@@ -1,0 +1,39 @@
+[debug] [2025-12-14T13:18:55.990Z] ----------------------------------------------------------------------
+[debug] [2025-12-14T13:18:55.993Z] Command:       /usr/local/Cellar/node@22/22.19.0/bin/node /Users/salemkammoun/.nvm/versions/node/v22.20.0/bin/firebase init
+[debug] [2025-12-14T13:18:55.993Z] CLI Version:   14.19.1
+[debug] [2025-12-14T13:18:55.994Z] Platform:      darwin
+[debug] [2025-12-14T13:18:55.994Z] Node Version:  v22.19.0
+[debug] [2025-12-14T13:18:55.994Z] Time:          Sun Dec 14 2025 14:18:55 GMT+0100 (Central European Standard Time)
+[debug] [2025-12-14T13:18:55.994Z] ----------------------------------------------------------------------
+[debug] 
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /Users/salemkammoun/Documents/salemk/gestion-restaurant
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] 
+[debug] [2025-12-14T13:19:02.114Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-14T13:19:02.114Z] > authorizing via signed-in user (kammoun.salem@gmail.com)
+[debug] [2025-12-14T13:19:02.115Z] Checked if tokens are valid: true, expires at: 1765721662842
+[debug] [2025-12-14T13:19:02.115Z] Checked if tokens are valid: true, expires at: 1765721662842
+[debug] [2025-12-14T13:19:02.117Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/colishare [none]
+[debug] [2025-12-14T13:19:02.862Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/colishare 403
+[debug] [2025-12-14T13:19:02.862Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/colishare {"error":{"code":403,"message":"The caller does not have permission","status":"PERMISSION_DENIED"}}
+[debug] [2025-12-14T13:19:02.863Z] Request to https://firebase.googleapis.com/v1beta1/projects/colishare had HTTP Error: 403, The caller does not have permission
+[debug] [2025-12-14T13:19:03.110Z] FirebaseError: Request to https://firebase.googleapis.com/v1beta1/projects/colishare had HTTP Error: 403, The caller does not have permission
+    at responseToError (/Users/salemkammoun/.nvm/versions/node/v22.20.0/lib/node_modules/firebase-tools/lib/responseToError.js:52:12)
+    at RetryOperation._fn (/Users/salemkammoun/.nvm/versions/node/v22.20.0/lib/node_modules/firebase-tools/lib/apiv2.js:312:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[error] 
+[error] Error: Failed to get Firebase project colishare. Please make sure the project exists and your account has permission to access it.

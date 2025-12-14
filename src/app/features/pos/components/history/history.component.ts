@@ -1,11 +1,3 @@
-#!/bin/bash
-
-# Mise à jour de HistoryComponent
-# - Ajout de la structure 'items' dans l'interface
-# - Ajout de données mockées pour les détails
-# - Ajout de la modale de détails dans le template
-
-cat <<EOF > src/app/features/pos/components/history/history.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -33,7 +25,7 @@ interface OrderHistory {
   selector: 'app-history',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: \`
+  template: `
     <div class="min-h-screen bg-gray-50 p-4 md:p-8 pb-24">
       
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -251,7 +243,7 @@ interface OrderHistory {
       </div>
 
     </div>
-  \`
+  `
 })
 export class HistoryComponent implements OnInit {
   
@@ -396,7 +388,3 @@ export class HistoryComponent implements OnInit {
     }
   }
 }
-EOF
-
-echo "✅ Modale de détails de commande activée sur l'historique."
-EOF

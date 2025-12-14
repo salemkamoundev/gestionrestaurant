@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './core/guards/role.guard';
-
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 import { LoginComponent } from './features/auth/login/login.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
@@ -10,8 +9,9 @@ import { DishListComponent } from './features/dishes/components/dish-list/dish-l
 import { DishFormComponent } from './features/dishes/components/dish-form/dish-form.component';
 import { TableGridComponent } from './features/pos/components/table-grid/table-grid.component';
 import { OrderInterfaceComponent } from './features/pos/components/order-interface/order-interface.component';
+import { HistoryComponent } from './features/pos/components/history/history.component'; // Import Ajouté
 import { EmployeeListComponent } from './features/hr/components/employee-list/employee-list.component';
-import { EmployeeFormComponent } from './features/hr/components/employee-form/employee-form.component'; // NOUVEAU
+import { EmployeeFormComponent } from './features/hr/components/employee-form/employee-form.component';
 import { PlanningComponent } from './features/hr/components/planning/planning.component';
 import { ShiftClosingComponent } from './features/hr/components/shift-closing/shift-closing.component';
 import { ExpenseListComponent } from './features/finance/components/expense-list/expense-list.component';
@@ -44,10 +44,12 @@ export const routes: Routes = [
       // POS
       { path: 'pos/tables', component: TableGridComponent, data: { roles: ['super_admin', 'admin', 'server'] } },
       { path: 'pos/order', component: OrderInterfaceComponent, data: { roles: ['super_admin', 'admin', 'server'] } },
+      
+      // ✅ ROUTE HISTORIQUE AJOUTÉE ICI (Pour correspondre au bouton du menu)
+      { path: 'pos/history', component: HistoryComponent, data: { roles: ['super_admin', 'admin', 'server'] } },
 
       // HR
       { path: 'hr/employees', component: EmployeeListComponent, data: { roles: ['super_admin', 'admin'] } },
-      // ROUTES EMPLOYÉS AJOUTÉES :
       { path: 'hr/employees/new', component: EmployeeFormComponent, data: { roles: ['super_admin', 'admin'] } },
       { path: 'hr/employees/edit/:id', component: EmployeeFormComponent, data: { roles: ['super_admin', 'admin'] } },
       

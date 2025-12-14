@@ -12,30 +12,30 @@ import { Table } from '../../../../core/models/interfaces';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="p-6 bg-gray-50 min-h-screen">
+    <div class="p-4 md:p-6 bg-gray-50 min-h-screen">
       
-      <div class="flex justify-between items-center mb-8">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h2 class="text-3xl font-bold text-gray-800 flex items-center gap-2">
+          <h2 class="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2">
             <span *ngIf="!selectedZone" class="text-3xl">🏢</span>
             <span *ngIf="selectedZone" (click)="clearZoneSelection()" class="cursor-pointer hover:text-indigo-600 transition">
-               🏢 Salles
+               🏢
             </span>
-            <span *ngIf="selectedZone" class="text-gray-400">/</span>
-            <span *ngIf="selectedZone" class="text-indigo-600">{{ selectedZone }}</span>
+            <span *ngIf="selectedZone" class="text-gray-400 mx-1">/</span>
+            <span *ngIf="selectedZone" class="text-indigo-600 truncate max-w-[200px]">{{ selectedZone }}</span>
           </h2>
-          <p class="text-gray-500">
-            {{ selectedZone ? 'Gérez les tables de cet espace' : 'Sélectionnez une salle pour voir les tables' }}
+          <p class="text-sm text-gray-500 mt-1">
+            {{ selectedZone ? 'Tables de cet espace' : 'Sélectionnez une salle' }}
           </p>
         </div>
 
-        <div class="flex gap-3">
+        <div class="flex flex-wrap gap-2 w-full md:w-auto">
           <button *ngIf="selectedZone" (click)="clearZoneSelection()" 
-                  class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg shadow-sm hover:bg-gray-50 font-medium">
+                  class="flex-1 md:flex-none bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg shadow-sm hover:bg-gray-50 font-medium">
             ⬅ Retour
           </button>
 
-          <div *ngIf="canEdit$ | async" class="flex items-center gap-3 bg-white px-4 py-2 rounded-lg shadow-sm border">
+          <div *ngIf="canEdit$ | async" class="flex-1 md:flex-none flex items-center justify-center gap-3 bg-white px-4 py-2 rounded-lg shadow-sm border min-w-[160px]">
             <span class="text-sm font-medium text-gray-700">Mode Édition</span>
             <button (click)="toggleEditMode()" 
                     [ngClass]="isEditMode ? 'bg-indigo-600' : 'bg-gray-200'"
@@ -47,45 +47,38 @@ import { Table } from '../../../../core/models/interfaces';
         </div>
       </div>
 
-      <div *ngIf="!selectedZone" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fadeIn">
-        
+      <div *ngIf="!selectedZone" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 animate-fadeIn">
         <button *ngIf="isEditMode" (click)="openZoneModal()" 
-                class="h-48 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col justify-center items-center text-gray-400 hover:border-indigo-500 hover:text-indigo-500 hover:bg-white transition bg-gray-50 group">
-           <span class="text-5xl mb-3 group-hover:scale-110 transition-transform">🏗️</span>
-           <span class="font-medium text-lg">Créer Salle</span>
-           <span class="text-xs mt-1 text-gray-400">Ajoute une nouvelle zone</span>
+                class="h-40 md:h-48 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col justify-center items-center text-gray-400 hover:border-indigo-500 hover:text-indigo-500 hover:bg-white transition bg-gray-50 group">
+           <span class="text-4xl md:text-5xl mb-3 group-hover:scale-110 transition-transform">🏗️</span>
+           <span class="font-medium">Créer Salle</span>
         </button>
 
         <div *ngFor="let zone of zones$ | async" 
              (click)="selectZone(zone.name)"
-             class="bg-white h-48 rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-indigo-300 transition-all cursor-pointer flex flex-col items-center justify-center relative overflow-hidden group">
+             class="bg-white h-40 md:h-48 rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-indigo-300 transition-all cursor-pointer flex flex-col items-center justify-center relative overflow-hidden group active:scale-95">
           <div class="absolute inset-0 bg-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <span class="text-6xl mb-4 relative z-10 transform group-hover:scale-110 transition-transform">🛋️</span>
-          <h3 class="text-xl font-bold text-gray-800 relative z-10">{{ zone.name }}</h3>
+          <span class="text-5xl md:text-6xl mb-3 md:mb-4 relative z-10">🛋️</span>
+          <h3 class="text-lg md:text-xl font-bold text-gray-800 relative z-10">{{ zone.name }}</h3>
           <span class="text-sm text-gray-500 relative z-10 mt-1">{{ zone.count }} table(s)</span>
           <div *ngIf="zone.occupied > 0" class="absolute top-3 right-3 bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded-full border border-orange-200">
-             {{ zone.occupied }} occupée(s)
+             {{ zone.occupied }}
           </div>
         </div>
       </div>
 
-
-      <div *ngIf="selectedZone" class="animate-fadeIn">
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-          
+      <div *ngIf="selectedZone" class="animate-fadeIn pb-20">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
           <button *ngIf="isEditMode" (click)="openTableModal(selectedZone)" 
-                  class="h-40 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col justify-center items-center text-gray-400 hover:border-indigo-500 hover:text-indigo-500 hover:bg-white transition bg-gray-50">
-             <span class="text-4xl mb-2">+</span>
-             <span class="font-medium">Ajouter Table</span>
+                  class="h-32 md:h-40 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col justify-center items-center text-gray-400 hover:border-indigo-500 hover:text-indigo-500 hover:bg-white transition bg-gray-50">
+             <span class="text-3xl md:text-4xl mb-2">+</span>
+             <span class="font-medium text-sm">Ajouter</span>
           </button>
 
           <div *ngFor="let table of currentTables$ | async" class="relative group">
-            
             <button *ngIf="isEditMode" (click)="deleteTable(table.id)"
-                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md z-10 hover:bg-red-600 transform hover:scale-110 transition">
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-               </svg>
+                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-md z-10 hover:bg-red-600 transform hover:scale-110 transition">
+               🗑️
             </button>
 
             <button (click)="onTableClick(table)"
@@ -95,25 +88,19 @@ import { Table } from '../../../../core/models/interfaces';
                       'bg-green-50 border-green-200': table.status === 'occupied' && table.paymentStatus === 'paid',
                       'ring-2 ring-indigo-500 ring-offset-2': isEditMode
                     }"
-                    class="w-full h-40 rounded-2xl border-2 flex flex-col justify-center items-center shadow-sm transition-all duration-200 relative overflow-hidden">
+                    class="w-full h-32 md:h-40 rounded-2xl border-2 flex flex-col justify-center items-center shadow-sm transition-all duration-200 relative overflow-hidden active:scale-95">
               
               <div [ngClass]="{
                 'bg-green-500': table.status === 'available',
                 'bg-red-500': table.status === 'occupied' && (!table.paymentStatus || table.paymentStatus === 'pending'),
                 'bg-blue-500': table.status === 'occupied' && table.paymentStatus === 'paid'
-              }" class="absolute top-4 left-4 w-3 h-3 rounded-full animate-pulse"></div>
+              }" class="absolute top-3 left-3 w-2.5 h-2.5 rounded-full animate-pulse"></div>
 
-              <div *ngIf="table.status === 'occupied' && table.paymentStatus === 'paid'" 
-                   class="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-bl-lg shadow-sm z-10">
-                 💰 PAYÉ
-              </div>
-               <div *ngIf="table.status === 'occupied' && (!table.paymentStatus || table.paymentStatus === 'pending')" 
-                   class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-bl-lg shadow-sm z-10">
-                 ⏳ EN COURS
-              </div>
+              <div *ngIf="table.status === 'occupied' && table.paymentStatus === 'paid'" class="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg shadow-sm z-10">PAYÉ</div>
+              <div *ngIf="table.status === 'occupied' && (!table.paymentStatus || table.paymentStatus === 'pending')" class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg shadow-sm z-10">EN COURS</div>
 
-              <span class="text-3xl font-extrabold text-gray-800">{{ table.number }}</span>
-              <div class="flex items-center gap-1 mt-2 text-gray-400 text-sm">
+              <span class="text-2xl md:text-3xl font-extrabold text-gray-800">{{ table.number }}</span>
+              <div class="flex items-center gap-1 mt-1 text-gray-400 text-xs">
                  <span>👥</span><span>{{ table.capacity }}</span>
               </div>
             </button>
@@ -121,109 +108,56 @@ import { Table } from '../../../../core/models/interfaces';
         </div>
       </div>
 
-      <div *ngIf="actionTable" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-          <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" (click)="closeActionModal()"></div>
-
-          <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-          <div class="relative inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
-            
+      <div *ngIf="actionTable" class="fixed inset-0 z-50 overflow-y-auto px-4 py-6 md:py-10 flex items-center justify-center">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm" (click)="closeActionModal()"></div>
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
             <div class="bg-indigo-900 px-6 py-4 flex justify-between items-center">
-              <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                <span>🍽️</span> Table {{ actionTable.number }}
-              </h3>
-              <button (click)="closeActionModal()" class="text-indigo-200 hover:text-white text-2xl leading-none">&times;</button>
+              <h3 class="text-xl font-bold text-white flex items-center gap-2">🍽️ Table {{ actionTable.number }}</h3>
+              <button (click)="closeActionModal()" class="text-indigo-200 hover:text-white text-3xl leading-none">&times;</button>
             </div>
-
-            <div class="p-6 space-y-4">
-              
-              <button (click)="goToOrder(actionTable)" 
-                      class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold py-4 rounded-xl flex items-center px-4 gap-3 transition-colors">
-                 <span class="text-2xl">📝</span>
-                 <div class="flex flex-col items-start">
-                   <span>Modifier la commande</span>
-                   <span class="text-xs font-normal text-gray-500">Ajouter ou retirer des plats</span>
-                 </div>
+            <div class="p-6 space-y-3">
+              <button (click)="goToOrder(actionTable)" class="w-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold py-3 rounded-xl flex items-center px-4 gap-3">
+                 <span class="text-xl">📝</span> <div class="text-left"><div>Modifier</div><div class="text-xs font-normal">Ajouter des plats</div></div>
               </button>
-
-              <div class="border-t border-gray-100 my-2"></div>
-
-              <button *ngIf="actionTable.status === 'occupied' && actionTable.paymentStatus !== 'paid'" 
-                      (click)="markAsPaid(actionTable)" 
-                      class="w-full bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 font-bold py-4 rounded-xl flex items-center px-4 gap-3 transition-colors">
-                 <span class="text-2xl">💰</span>
-                 <div class="flex flex-col items-start">
-                   <span>Encaisser / Payer</span>
-                   <span class="text-xs font-normal text-gray-500">Marquer comme payé (reste à table)</span>
-                 </div>
+              <button *ngIf="actionTable.status === 'occupied' && actionTable.paymentStatus !== 'paid'" (click)="markAsPaid(actionTable)" class="w-full bg-green-50 text-green-700 border border-green-200 font-bold py-3 rounded-xl flex items-center px-4 gap-3">
+                 <span class="text-xl">💰</span> <div class="text-left"><div>Encaisser</div><div class="text-xs font-normal">Marquer comme payé</div></div>
               </button>
-              
-              <button *ngIf="actionTable.status === 'occupied' && actionTable.paymentStatus === 'paid'" 
-                      class="w-full bg-gray-100 text-gray-400 font-bold py-4 rounded-xl flex items-center justify-center gap-2 cursor-not-allowed">
-                 <span>✅ Déjà payé</span>
+              <button (click)="freeTable(actionTable)" class="w-full bg-red-50 text-red-700 border border-red-200 font-bold py-3 rounded-xl flex items-center px-4 gap-3 mt-2">
+                 <span class="text-xl">🏁</span> <div class="text-left"><div>Terminer</div><div class="text-xs font-normal">Libérer la table</div></div>
               </button>
-
-              <button (click)="freeTable(actionTable)" 
-                      class="w-full bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold py-4 rounded-xl flex items-center px-4 gap-3 transition-colors mt-4">
-                 <span class="text-2xl">🏁</span>
-                 <div class="flex flex-col items-start">
-                   <span>Terminer & Libérer</span>
-                   <span class="text-xs font-normal text-gray-500">Clôturer la commande et vider la table</span>
-                 </div>
-              </button>
-
             </div>
-          </div>
         </div>
       </div>
 
-      <div *ngIf="showModal" class="fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-          <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeModal()"></div>
-          <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-          <div class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            
-            <div class="bg-indigo-700 px-4 py-3 sm:px-6">
-              <h3 class="text-lg leading-6 font-medium text-white">
-                 {{ isZoneMode ? 'Nouvelle Salle' : (editingTableId ? 'Modifier Table' : 'Nouvelle Table') }}
-              </h3>
-            </div>
-
-            <form [formGroup]="tableForm" (ngSubmit)="onSubmit()" class="px-4 pt-5 pb-4 sm:p-6">
-              <div class="mb-4">
-                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                   {{ isZoneMode ? 'Nom de la nouvelle salle' : 'Salle / Zone' }}
-                 </label>
-                 <input *ngIf="isZoneMode" type="text" formControlName="zone" class="block w-full rounded-md border-gray-300 shadow-sm p-3 border text-lg" placeholder="Ex: Terrasse Vue Mer">
+      <div *ngIf="showModal" class="fixed inset-0 z-50 overflow-y-auto px-4 py-6 flex items-center justify-center">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeModal()"></div>
+        <div class="relative bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div class="bg-indigo-700 px-4 py-3"><h3 class="text-lg font-bold text-white">{{ isZoneMode ? 'Nouvelle Salle' : 'Gestion Table' }}</h3></div>
+            <form [formGroup]="tableForm" (ngSubmit)="onSubmit()" class="p-6 space-y-4">
+              
+              <div>
+                 <label class="block text-sm font-medium text-gray-700 mb-1">Salle</label>
+                 
+                 <input *ngIf="isZoneMode" type="text" formControlName="zone" class="w-full border-gray-300 rounded-lg p-2.5 border" placeholder="Nom de la salle">
+                 
                  <div *ngIf="!isZoneMode">
-                    <input type="text" formControlName="zone" list="zonesList" class="block w-full rounded-md border-gray-300 shadow-sm p-2 border">
-                    <datalist id="zonesList">
-                      <option *ngFor="let z of existingZoneNames" [value]="z"></option>
-                    </datalist>
+                    <select formControlName="zone" class="w-full border-gray-300 rounded-lg p-2.5 border bg-white">
+                      <option value="" disabled>-- Choisir une salle --</option>
+                      <option *ngFor="let z of existingZoneNames" [value]="z">{{ z }}</option>
+                    </select>
                  </div>
               </div>
+
               <div *ngIf="!isZoneMode" class="grid grid-cols-2 gap-4">
-                <div>
-                   <label class="block text-sm font-medium text-gray-700">Numéro de table</label>
-                  <input type="text" formControlName="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
-                </div>
-                <div>
-                   <label class="block text-sm font-medium text-gray-700">Capacité</label>
-                   <input type="number" formControlName="capacity" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
-                </div>
+                <div><label class="block text-sm font-medium text-gray-700">N°</label><input type="text" formControlName="number" class="w-full border-gray-300 rounded-lg p-2 border"></div>
+                <div><label class="block text-sm font-medium text-gray-700">Capacité</label><input type="number" formControlName="capacity" class="w-full border-gray-300 rounded-lg p-2 border"></div>
               </div>
-              <div *ngIf="isZoneMode" class="bg-blue-50 text-blue-700 p-3 rounded text-sm mb-4">
-                ℹ️ Une première table "Table 01" sera créée automatiquement pour initialiser cette salle.
-              </div>
-              <div class="mt-6 flex justify-end gap-3">
-                <button type="button" (click)="closeModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Annuler</button>
-                <button type="submit" [disabled]="tableForm.invalid" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50">
-                  {{ isZoneMode ? 'Créer la salle' : 'Enregistrer' }}
-                </button>
+              
+              <div class="flex justify-end gap-3 pt-2">
+                <button type="button" (click)="closeModal()" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg">Annuler</button>
+                <button type="submit" [disabled]="tableForm.invalid" class="px-4 py-2 bg-indigo-600 text-white rounded-lg">Valider</button>
               </div>
             </form>
-          </div>
         </div>
       </div>
 
@@ -248,7 +182,6 @@ export class TableGridComponent {
   selectedZoneSubject = new BehaviorSubject<string | null>(null);
   existingZoneNames: string[] = [];
   
-  // Table sélectionnée pour les actions (Occpée)
   actionTable: Table | null = null;
 
   zones$ = this.allTables$.pipe(
@@ -293,32 +226,20 @@ export class TableGridComponent {
 
   toggleEditMode() { this.isEditMode = !this.isEditMode; }
 
-  // --- LOGIQUE D'INTERACTION ---
-
   onTableClick(table: Table) {
     if (this.isEditMode) {
-      // MODE EDITION
       this.isZoneMode = false;
       this.editingTableId = table.id;
-      this.tableForm.patchValue({ 
-        number: table.number, 
-        capacity: table.capacity,
-        zone: table.zone || 'Salle Principale'
-      });
+      this.tableForm.patchValue({ number: table.number, capacity: table.capacity, zone: table.zone || 'Salle Principale' });
       this.showModal = true;
     } else {
-      // MODE SERVICE
       if (table.status === 'available') {
-        // Table libre -> Commande directe
         this.goToOrder(table);
       } else {
-        // Table occupée -> Menu d'actions
         this.actionTable = table;
       }
     }
   }
-
-  // --- ACTIONS DU MENU ---
 
   closeActionModal() { this.actionTable = null; }
 
@@ -328,34 +249,19 @@ export class TableGridComponent {
   }
 
   async markAsPaid(table: Table) {
-    // Paiement simple sans libérer la table
     await this.orderService.updateTable(table.id, { paymentStatus: 'paid' });
     this.closeActionModal();
   }
 
   async freeTable(table: Table) {
     if(confirm('Confirmez-vous que la table est débarrassée et le client parti ?')) {
-      
-      // 1. Clôturer la commande si elle existe
       if (table.currentOrderId) {
-        await this.orderService.updateOrder(table.currentOrderId, { 
-          status: 'closed',
-          closedAt: new Date()
-        });
+        await this.orderService.updateOrder(table.currentOrderId, { status: 'closed', closedAt: new Date() });
       }
-
-      // 2. Libérer la table
-      await this.orderService.updateTable(table.id, { 
-        status: 'available', 
-        paymentStatus: 'pending', 
-        currentOrderId: '' 
-      });
-      
+      await this.orderService.updateTable(table.id, { status: 'available', paymentStatus: 'pending', currentOrderId: '' });
       this.closeActionModal();
     }
   }
-
-  // --- CRUD (Création Salle/Table) ---
 
   openZoneModal() {
     this.isZoneMode = true;
