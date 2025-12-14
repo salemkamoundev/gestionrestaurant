@@ -22,7 +22,8 @@ import { Dish, OrderItem } from '../../../../core/models/interfaces';
            <span class="font-bold text-gray-800">
              {{ tableNumber ? 'Table ' + tableNumber : 'À emporter' }}
            </span>
-           <div class="w-10"></div> </div>
+           <div class="w-10"></div> 
+        </div>
 
         <div class="bg-white p-2 md:p-3 shadow-sm z-10 border-b border-gray-100">
           <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1 px-1">
@@ -38,7 +39,8 @@ import { Dish, OrderItem } from '../../../../core/models/interfaces';
           </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-2 md:p-4 bg-gray-100 pb-24 md:pb-4"> <div *ngIf="filteredDishes$ | async as dishes; else loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+        <div class="flex-1 overflow-y-auto p-2 md:p-4 bg-gray-100 pb-24 md:pb-4"> 
+          <div *ngIf="filteredDishes$ | async as dishes; else loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
             
             <button *ngFor="let dish of dishes"
                     (click)="addToCart(dish)"
@@ -80,7 +82,7 @@ import { Dish, OrderItem } from '../../../../core/models/interfaces';
       <div *ngIf="cartItems.length > 0" 
            class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20 flex justify-between items-center safe-area-bottom">
         <div class="flex flex-col">
-          <span class="text-xs text-gray-500">{{ cartItems.length }} articles</span>
+          <span class="text-xs text-gray-500">{{ cartItems.length }} articles {{ isEditing ? '(En modification)' : '' }}</span>
           <span class="font-bold text-xl text-indigo-700">{{ totalAmount | currency:'EUR' }}</span>
         </div>
         <button (click)="openMobileCart()" 
@@ -97,7 +99,7 @@ import { Dish, OrderItem } from '../../../../core/models/interfaces';
              'translate-y-0': isMobileCartOpen
            }"
            class="fixed inset-0 z-30 bg-white transition-transform duration-300 md:translate-y-0 md:static md:w-1/3 md:flex md:flex-col shadow-2xl md:shadow-none flex flex-col h-full">
-        
+         
         <div class="p-4 bg-indigo-900 text-white flex justify-between items-center shadow-lg shrink-0">
           <button (click)="closeMobileCart()" class="md:hidden mr-3 p-1 rounded-full hover:bg-white/20">
              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -106,7 +108,7 @@ import { Dish, OrderItem } from '../../../../core/models/interfaces';
           </button>
 
           <div class="flex-1">
-            <h2 class="font-bold text-xl">Commande</h2>
+            <h2 class="font-bold text-xl">{{ isEditing ? 'Modifier Commande' : 'Nouvelle Commande' }}</h2>
             <p class="text-indigo-200 text-xs uppercase tracking-wider font-semibold hidden md:block">
               {{ tableNumber ? 'Table ' + tableNumber : 'À emporter' }}
             </p>
@@ -117,6 +119,7 @@ import { Dish, OrderItem } from '../../../../core/models/interfaces';
         </div>
 
         <div class="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50">
+          
           <div *ngFor="let item of cartItems; let i = index" class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-lg shadow-sm">
             <div class="flex-1">
               <div class="font-bold text-gray-800 text-sm">{{ item.dishName }}</div>
@@ -144,7 +147,7 @@ import { Dish, OrderItem } from '../../../../core/models/interfaces';
           <button (click)="validateOrder()" 
                   [disabled]="cartItems.length === 0"
                   class="w-full bg-green-600 hover:bg-green-700 text-white text-lg font-bold py-4 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform flex justify-center items-center gap-2">
-            <span>✅ Valider</span>
+            <span>{{ isEditing ? '💾 Mettre à jour' : '✅ Valider' }}</span>
           </button>
         </div>
       </div>
@@ -184,18 +187,40 @@ export class OrderInterfaceComponent implements OnInit {
   cartItems: OrderItem[] = [];
   serverName = 'Serveur';
   
-  // NOUVEAU: État du panier mobile
   isMobileCartOpen = false;
+  
+  // Variables pour l'édition
+  isEditing = false;
+  currentOrderId: string | null = null;
 
-  ngOnInit() {
+  async ngOnInit() {
     this.route.queryParams.subscribe(params => {
       this.tableId = params['tableId'] || 'takeaway';
       this.tableNumber = params['tableNumber'];
+      this.loadExistingOrder(); // Tenter de charger une commande existante
     });
-    
-    this.authService.getUserProfile().then(user => {
-      if(user) this.serverName = user.displayName || 'Staff';
-    });
+
+    const user = await this.authService.getUserProfile();
+    if(user) this.serverName = user.displayName || 'Staff';
+  }
+
+  // LOGIQUE DE RECUPERATION DE COMMANDE
+  async loadExistingOrder() {
+    if (this.tableId && this.tableId !== 'takeaway') {
+      const table = await this.orderService.getTable(this.tableId);
+      
+      // Si la table est occupée et a un ID de commande en cours
+      if (table && table.status === 'occupied' && table.currentOrderId) {
+        const order = await this.orderService.getOrder(table.currentOrderId);
+        
+        if (order && order.status === 'open') {
+          console.log('📦 Commande existante trouvée :', order);
+          this.isEditing = true;
+          this.currentOrderId = order.id;
+          this.cartItems = order.items; // Ceci va déclencher l'affichage du footer "Voir Panier"
+        }
+      }
+    }
   }
 
   setCategory(catId: string) {
@@ -226,7 +251,6 @@ export class OrderInterfaceComponent implements OnInit {
       this.cartItems[index].quantity--;
     } else {
       this.cartItems.splice(index, 1);
-      // Si le panier devient vide sur mobile, on le ferme peut-être ?
       if (this.cartItems.length === 0) {
         this.isMobileCartOpen = false;
       }
@@ -240,22 +264,29 @@ export class OrderInterfaceComponent implements OnInit {
   async validateOrder() {
     if (this.cartItems.length === 0) return;
 
-    const order: any = {
+    const orderData: any = {
       tableId: this.tableId || 'takeaway',
       serverName: this.serverName,
       items: this.cartItems,
       totalAmount: this.totalAmount,
-      status: 'closed' // Simplification pour le demo
+      status: 'open' 
     };
 
     try {
-      const orderId = await this.orderService.createOrder(order);
-      await this.orderService.validateOrder(orderId, order);
-      alert('Commande validée !');
+      if (this.isEditing && this.currentOrderId) {
+        // MISE A JOUR
+        await this.orderService.updateOrder(this.currentOrderId, orderData);
+        alert('Commande mise à jour !');
+      } else {
+        // CREATION
+        await this.orderService.createOrder(orderData);
+        alert('Nouvelle commande validée !');
+      }
+      
       this.router.navigate(['/pos/tables']);
     } catch (error) {
       console.error(error);
-      alert('Erreur lors de la commande');
+      alert('Erreur lors de la validation');
     }
   }
 
@@ -263,7 +294,6 @@ export class OrderInterfaceComponent implements OnInit {
     this.router.navigate(['/pos/tables']);
   }
 
-  // --- Gestion Mobile ---
   openMobileCart() {
     this.isMobileCartOpen = true;
   }

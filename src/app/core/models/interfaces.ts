@@ -23,7 +23,7 @@ export interface Product {
 
 export interface Ingredient {
   productId: string; 
-  quantity: number;  
+  quantity: number;
 }
 
 export interface Dish {
@@ -59,10 +59,11 @@ export interface Order {
 export interface Table {
   id: string;
   number: string;
+  zone: string;  // NOUVEAU CHAMP
   capacity: number;
   status: 'available' | 'occupied' | 'reserved';
   currentOrderId?: string;
-  paymentStatus?: 'pending' | 'paid'; // NOUVEAU CHAMP
+  paymentStatus?: 'pending' | 'paid';
 }
 
 export interface Expense {

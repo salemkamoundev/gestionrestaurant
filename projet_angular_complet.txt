@@ -1,0 +1,3897 @@
+==============================================================================
+FICHIER : src/index.html
+==============================================================================
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>GestionRestaurant</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>
+
+
+
+==============================================================================
+FICHIER : src/app/app.component.html
+==============================================================================
+<div class="flex h-screen bg-gray-100 overflow-hidden">
+
+  <aside class="fixed inset-y-0 left-0 z-30 w-64 bg-indigo-900 text-white transition-transform duration-300 ease-in-out transform flex flex-col shadow-2xl font-sans"
+         [class.-translate-x-full]="!isMenuOpen" 
+         [class.md:translate-x-0]="true">
+    
+    <div class="flex items-center justify-center h-16 bg-indigo-950 border-b border-indigo-800 shadow-sm shrink-0">
+      <span class="text-3xl mr-2">👨‍🍳</span>
+      <span class="text-xl font-bold tracking-wider">RestoManager</span>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto py-4">
+      
+      <div class="px-4 mb-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider">
+        Service
+      </div>
+
+      <a routerLink="/dashboard" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+         class="flex items-center px-4 py-3 text-sm font-medium hover:bg-indigo-800 transition-all mb-1 cursor-pointer">
+        <span class="mr-3 text-xl">📊</span> Dashboard
+      </a>
+
+      <a routerLink="/pos/tables" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+         class="flex items-center px-4 py-3 text-sm font-medium hover:bg-indigo-800 transition-all mb-1 cursor-pointer">
+        <span class="mr-3 text-xl">🪑</span> Salle & Tables
+      </a>
+
+      <a routerLink="/pos/history" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+         class="flex items-center px-4 py-3 text-sm font-bold bg-indigo-800/50 hover:bg-indigo-800 transition-all mb-1 cursor-pointer border-l-4 border-transparent hover:border-indigo-400">
+        <span class="mr-3 text-xl">📜</span> Historique
+      </a>
+
+      <a routerLink="/pos/order" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+         class="flex items-center px-4 py-3 text-sm font-medium hover:bg-indigo-800 transition-all mb-1 cursor-pointer">
+        <span class="mr-3 text-xl">📝</span> Prise de Commande
+      </a>
+
+      <div class="px-4 mt-6 mb-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider">
+        Administration
+      </div>
+
+      <a routerLink="/hr/employees" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+         class="flex items-center px-4 py-3 text-sm font-medium hover:bg-indigo-800 transition-all mb-1 cursor-pointer">
+        <span class="mr-3 text-xl">👥</span> Personnel (RH)
+      </a>
+
+      <a routerLink="/hr/planning" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+         class="flex items-center px-4 py-3 text-sm font-medium hover:bg-indigo-800 transition-all mb-1 cursor-pointer">
+        <span class="mr-3 text-xl">📅</span> Planning
+      </a>
+
+      <a routerLink="/dishes" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+         class="flex items-center px-4 py-3 text-sm font-medium hover:bg-indigo-800 transition-all mb-1 cursor-pointer">
+        <span class="mr-3 text-xl">🍽️</span> Menu / Carte
+      </a>
+
+      <a routerLink="/stock" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+         class="flex items-center px-4 py-3 text-sm font-medium hover:bg-indigo-800 transition-all mb-1 cursor-pointer">
+        <span class="mr-3 text-xl">📦</span> Stocks
+      </a>
+
+      <a routerLink="/finance/expenses" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+         class="flex items-center px-4 py-3 text-sm font-medium hover:bg-indigo-800 transition-all mb-1 cursor-pointer">
+        <span class="mr-3 text-xl">💰</span> Finance
+      </a>
+
+    </nav>
+
+    <div class="p-4 border-t border-indigo-800 bg-indigo-950 shrink-0">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-lg text-white">S</div>
+        <div class="overflow-hidden">
+          <p class="text-sm font-medium text-white truncate">Super Admin</p>
+          <p class="text-xs text-indigo-300 truncate">Connecté</p>
+        </div>
+      </div>
+      <button class="w-full flex justify-center items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm transition">
+        <span>🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <div class="flex-1 flex flex-col md:ml-64 transition-all duration-300 min-h-screen">
+    
+    <div class="md:hidden bg-white shadow-sm h-16 flex items-center justify-between px-4 z-10 sticky top-0">
+      <div class="flex items-center gap-3">
+        <button (click)="toggleMenu()" class="text-gray-600 focus:outline-none hover:text-indigo-600 p-2 rounded-md">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-8 w-8">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+        <span class="font-bold text-xl text-gray-800">RestoManager</span>
+      </div>
+    </div>
+
+    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 relative">
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+
+  <div *ngIf="isMenuOpen" (click)="closeMenu()" class="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"></div>
+
+</div>
+
+
+
+==============================================================================
+FICHIER : src/app/app.spec.ts
+==============================================================================
+import { TestBed } from '@angular/core/testing';
+import { App } from './app';
+
+describe('App', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [App],
+    }).compileComponents();
+  });
+
+  it('should create the app', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    expect(app).toBeTruthy();
+  });
+
+  it('should render title', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, gestion-restaurant');
+  });
+});
+
+
+
+==============================================================================
+FICHIER : src/app/core/models/interfaces.ts
+==============================================================================
+export type UserRole = 'super_admin' | 'admin' | 'server' | 'staff';
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName?: string;
+  role: UserRole;
+  jobTitle?: string;
+  phone?: string;
+  createdAt: Date | any;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  category: string;
+  unit: 'kg' | 'l' | 'piece';
+  quantity: number;
+  minThreshold: number; 
+  costPrice: number;    
+  updatedAt: Date | any;
+}
+
+export interface Ingredient {
+  productId: string; 
+  quantity: number;  
+}
+
+export interface Dish {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  imageUrl?: string;
+  category: 'starter' | 'main' | 'dessert' | 'drink';
+  ingredients: Ingredient[]; 
+  isAvailable: boolean;
+}
+
+export interface OrderItem {
+  dishId: string;
+  dishName: string;
+  quantity: number;
+  price: number;
+  status: 'pending' | 'cooking' | 'served';
+}
+
+export interface Order {
+  id: string;
+  tableId: string; 
+  serverName: string;
+  items: OrderItem[];
+  totalAmount: number;
+  status: 'open' | 'closed' | 'cancelled';
+  createdAt: any; 
+  closedAt?: any;
+}
+
+export interface Table {
+  id: string;
+  number: string;
+  capacity: number;
+  status: 'available' | 'occupied' | 'reserved';
+  currentOrderId?: string;
+  paymentStatus?: 'pending' | 'paid'; // NOUVEAU CHAMP
+}
+
+export interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  category: 'salary' | 'rent' | 'purchase' | 'utilities' | 'other';
+  date: any;
+  createdBy: string;
+}
+
+export interface Invoice {
+  id: string;
+  orderId: string;
+  amount: number;
+  paymentMethod: 'cash' | 'card' | 'check';
+  date: any;
+}
+
+
+
+==============================================================================
+FICHIER : src/app/core/services/hr.service.ts
+==============================================================================
+import { Injectable, inject } from '@angular/core';
+import { Firestore, collection, collectionData, addDoc, deleteDoc, updateDoc, doc, getDoc, setDoc } from '@angular/fire/firestore';
+import { FirebaseApp, initializeApp, deleteApp } from '@angular/fire/app';
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from '@angular/fire/auth';
+import { Observable, from, map } from 'rxjs';
+import { UserProfile } from '../models/interfaces';
+
+export interface Shift {
+  id?: string;
+  userId: string;
+  start: string; 
+  end: string;   
+  role: string;
+}
+
+export interface ClosingReport {
+  userId: string;
+  userName: string;
+  date: any;
+  theoreticalAmount: number;
+  declaredAmount: number;
+  difference: number;
+  comment?: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class HrService {
+  private firestore = inject(Firestore);
+  private app = inject(FirebaseApp); // Nécessaire pour l'astuce de création sans logout
+
+  // --- EMPLOYES (USERS) ---
+  
+  getEmployees(): Observable<UserProfile[]> {
+    const usersRef = collection(this.firestore, 'users');
+    return collectionData(usersRef, { idField: 'uid' }) as Observable<UserProfile[]>;
+  }
+
+  getEmployee(uid: string): Observable<UserProfile | undefined> {
+    const docRef = doc(this.firestore, `users/${uid}`);
+    return from(getDoc(docRef)).pipe(
+      map(snap => snap.exists() ? { uid: snap.id, ...snap.data() } as UserProfile : undefined)
+    );
+  }
+
+  // CREATE: Auth + Profile (Sans déconnecter l'admin)
+  async createEmployeeWithAuth(employee: UserProfile, password: string): Promise<void> {
+    // 1. Astuce : Créer une instance Firebase secondaire
+    // Cela permet de créer un user sans que l'Auth principal (celui de l'admin) ne bascule dessus
+    const secondaryApp = initializeApp(this.app.options, 'Secondary');
+    const secondaryAuth = getAuth(secondaryApp);
+
+    try {
+      // 2. Création du compte Auth
+      const credential = await createUserWithEmailAndPassword(secondaryAuth, employee.email, password);
+      const newUser = credential.user;
+
+      // 3. Mise à jour du nom dans Auth
+      await updateProfile(newUser, { displayName: employee.displayName });
+
+      // 4. Création de la fiche Firestore avec le bon UID
+      const userProfile: UserProfile = {
+        ...employee,
+        uid: newUser.uid, // On force l'UID généré par Auth
+        createdAt: new Date()
+      };
+
+      await setDoc(doc(this.firestore, `users/${newUser.uid}`), userProfile);
+
+    } catch (e) {
+      throw e; // On renvoie l'erreur au composant
+    } finally {
+      // 5. Nettoyage de l'instance secondaire
+      await deleteApp(secondaryApp);
+    }
+  }
+
+  async updateEmployee(uid: string, data: Partial<UserProfile>): Promise<void> {
+    const docRef = doc(this.firestore, `users/${uid}`);
+    await updateDoc(docRef, data);
+  }
+
+  async deleteEmployee(uid: string): Promise<void> {
+    const docRef = doc(this.firestore, `users/${uid}`);
+    await deleteDoc(docRef);
+  }
+
+  // --- PLANNING ---
+  getShifts(): Observable<Shift[]> {
+    const shiftsRef = collection(this.firestore, 'shifts');
+    return collectionData(shiftsRef, { idField: 'id' }) as Observable<Shift[]>;
+  }
+
+  async addShift(shift: Shift): Promise<void> {
+    await addDoc(collection(this.firestore, 'shifts'), shift);
+  }
+
+  async updateShift(id: string, data: Partial<Shift>): Promise<void> {
+    const docRef = doc(this.firestore, `shifts/${id}`);
+    await updateDoc(docRef, data);
+  }
+
+  async deleteShift(id: string): Promise<void> {
+    await deleteDoc(doc(this.firestore, `shifts/${id}`));
+  }
+
+  // --- CLOSING ---
+  async calculateDailyRevenue(serverName: string): Promise<number> {
+    return 0; 
+  }
+
+  async submitClosingReport(report: ClosingReport): Promise<void> {
+    await addDoc(collection(this.firestore, 'closing-reports'), report);
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/core/services/auth.service.ts
+==============================================================================
+import { Injectable, inject } from '@angular/core';
+import { Auth, authState, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, User } from '@angular/fire/auth';
+import { Firestore, doc, setDoc, docData, getDoc } from '@angular/fire/firestore';
+import { Router } from '@angular/router';
+import { Observable, of, switchMap } from 'rxjs';
+import { UserProfile, UserRole } from '../models/interfaces';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthService {
+  private auth = inject(Auth);
+  private firestore = inject(Firestore);
+  private router = inject(Router);
+
+  // Observable du profil utilisateur courant
+  readonly user$: Observable<UserProfile | null> = authState(this.auth).pipe(
+    switchMap(user => {
+      if (user) {
+        const userDoc = doc(this.firestore, `users/${user.uid}`);
+        return docData(userDoc, { idField: 'uid' }) as Observable<UserProfile>;
+      } else {
+        return of(null);
+      }
+    })
+  );
+
+  async login(email: string, pass: string): Promise<void> {
+    // 1. Connexion Auth
+    const credential = await signInWithEmailAndPassword(this.auth, email, pass);
+    const user = credential.user;
+
+    // 2. CHECK MAGIQUE : Si c'est admin@gmail.com, on le force SUPER_ADMIN
+    if (user.email === 'admin@gmail.com') {
+        console.log("👑 DÉTECTION DU SUPER ADMIN : Mise à jour des droits...");
+        await this.forceSuperAdmin(user);
+    }
+  }
+
+  // Fonction privée pour forcer les droits
+  private async forceSuperAdmin(user: User): Promise<void> {
+    const userProfile: UserProfile = {
+      uid: user.uid,
+      email: user.email || '',
+      displayName: user.displayName || 'Super Admin',
+      role: 'super_admin', // <--- C'EST ICI QUE LA MAGIE OPERE
+      createdAt: new Date()
+    };
+    
+    // On utilise setDoc avec {merge: true} pour ne pas écraser la date de création si elle existe déjà
+    await setDoc(doc(this.firestore, `users/${user.uid}`), userProfile, { merge: true });
+  }
+
+  // Inscription standard
+  async register(email: string, pass: string, name: string, role: UserRole = 'server'): Promise<void> {
+    const credential = await createUserWithEmailAndPassword(this.auth, email, pass);
+    const user = credential.user;
+    await updateProfile(user, { displayName: name });
+
+    const userProfile: UserProfile = {
+      uid: user.uid,
+      email: user.email || '',
+      displayName: name,
+      role: role,
+      createdAt: new Date()
+    };
+
+    await setDoc(doc(this.firestore, `users/${user.uid}`), userProfile);
+  }
+
+  async logout(): Promise<void> {
+    await signOut(this.auth);
+    this.router.navigate(['/login']);
+  }
+
+  async getUserProfile(): Promise<UserProfile | null> {
+    const user = this.auth.currentUser;
+    if (!user) return null;
+    
+    const snap = await getDoc(doc(this.firestore, `users/${user.uid}`));
+    return snap.exists() ? (snap.data() as UserProfile) : null;
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/core/services/stock.service.ts
+==============================================================================
+import { Injectable, inject } from '@angular/core';
+import { Firestore, collection, collectionData, doc, addDoc, updateDoc, deleteDoc, getDoc } from '@angular/fire/firestore';
+import { Observable, from, map } from 'rxjs';
+import { Product, Dish } from '../models/interfaces';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class StockService {
+  private firestore = inject(Firestore);
+  private productsCollection = collection(this.firestore, 'products');
+  private dishesCollection = collection(this.firestore, 'dishes');
+
+  // --- PRODUCTS ---
+  getProducts(): Observable<Product[]> {
+    return collectionData(this.productsCollection, { idField: 'id' }) as Observable<Product[]>;
+  }
+
+  async addProduct(product: Omit<Product, 'id'>): Promise<void> {
+    await addDoc(this.productsCollection, { ...product, updatedAt: new Date() });
+  }
+
+  async deleteProduct(id: string): Promise<void> {
+    await deleteDoc(doc(this.firestore, `products/${id}`));
+  }
+
+  // --- DISHES ---
+  getDishes(): Observable<Dish[]> {
+    return collectionData(this.dishesCollection, { idField: 'id' }) as Observable<Dish[]>;
+  }
+
+  // NOUVEAU : Récupérer un seul plat
+  getDish(id: string): Observable<Dish | undefined> {
+    const docRef = doc(this.firestore, `dishes/${id}`);
+    return from(getDoc(docRef)).pipe(
+      map(snap => snap.exists() ? { id: snap.id, ...snap.data() } as Dish : undefined)
+    );
+  }
+
+  async addDish(dish: Omit<Dish, 'id'>): Promise<void> {
+    await addDoc(this.dishesCollection, dish);
+  }
+
+  // NOUVEAU : Mettre à jour un plat
+  async updateDish(id: string, data: Partial<Dish>): Promise<void> {
+    const docRef = doc(this.firestore, `dishes/${id}`);
+    await updateDoc(docRef, data);
+  }
+
+  async deleteDish(id: string): Promise<void> {
+    const docRef = doc(this.firestore, `dishes/${id}`);
+    await deleteDoc(docRef);
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/core/services/finance.service.ts
+==============================================================================
+import { Injectable, inject } from '@angular/core';
+import { Firestore, collection, addDoc, collectionData, query, where, getDocs, orderBy, deleteDoc, doc } from '@angular/fire/firestore';
+import { Observable, combineLatest, map, from } from 'rxjs';
+import { Expense, Product, Order } from '../models/interfaces';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FinanceService {
+  private firestore = inject(Firestore);
+
+  // --- DEPENSES (EXPENSES) ---
+  getExpenses(): Observable<Expense[]> {
+    const ref = collection(this.firestore, 'expenses');
+    const q = query(ref, orderBy('date', 'desc'));
+    return collectionData(q, { idField: 'id' }) as Observable<Expense[]>;
+  }
+
+  async addExpense(expense: Omit<Expense, 'id'>): Promise<void> {
+    await addDoc(collection(this.firestore, 'expenses'), expense);
+  }
+
+  async deleteExpense(id: string): Promise<void> {
+    await deleteDoc(doc(this.firestore, `expenses/${id}`));
+  }
+
+  // --- DASHBOARD DATA ---
+  // Récupère les stats agrégées (C'est lourd à faire côté client, mais OK pour un MVP)
+  getDashboardStats(): Observable<any> {
+    const productsRef = collection(this.firestore, 'products');
+    const ordersRef = collection(this.firestore, 'orders');
+
+    const products$ = collectionData(productsRef, { idField: 'id' }) as Observable<Product[]>;
+    const orders$ = collectionData(query(ordersRef, where('status', '==', 'closed')), { idField: 'id' }) as Observable<Order[]>;
+
+    return combineLatest([products$, orders$]).pipe(
+      map(([products, orders]) => {
+        // 1. Chiffre d'affaires total
+        const totalRevenue = orders.reduce((acc, order) => acc + order.totalAmount, 0);
+
+        // 2. Alertes Stock (Produits sous le seuil)
+        const lowStockProducts = products.filter(p => p.quantity <= p.minThreshold);
+
+        // 3. Plat le plus vendu
+        const dishCount: Record<string, number> = {};
+        orders.forEach(order => {
+          order.items.forEach(item => {
+            dishCount[item.dishName] = (dishCount[item.dishName] || 0) + item.quantity;
+          });
+        });
+        
+        // Trouver le max
+        let bestSellerName = 'Aucun';
+        let maxSold = 0;
+        Object.entries(dishCount).forEach(([name, count]) => {
+          if (count > maxSold) {
+            maxSold = count;
+            bestSellerName = name;
+          }
+        });
+
+        return {
+          totalRevenue,
+          lowStockProducts,
+          bestSeller: { name: bestSellerName, count: maxSold }
+        };
+      })
+    );
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/core/services/order.service.ts
+==============================================================================
+import { Injectable, inject } from '@angular/core';
+import { Firestore, collection, collectionData, addDoc, updateDoc, doc, getDoc, deleteDoc } from '@angular/fire/firestore';
+import { Observable, map } from 'rxjs';
+import { Order, Table } from '../models/interfaces';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class OrderService {
+  private firestore = inject(Firestore);
+  private ordersCollection = collection(this.firestore, 'orders');
+  private tablesCollection = collection(this.firestore, 'tables');
+
+  // --- TABLES ---
+  getTables(): Observable<Table[]> {
+    // On trie les tables par numéro (approximatif via sort JS client-side pour simplifier)
+    return (collectionData(this.tablesCollection, { idField: 'id' }) as Observable<Table[]>).pipe(
+      map(tables => tables.sort((a, b) => {
+        // Tri alphanumérique (1, 2, 10 au lieu de 1, 10, 2)
+        return a.number.localeCompare(b.number, undefined, { numeric: true });
+      }))
+    );
+  }
+
+  async addTable(table: Omit<Table, 'id'>): Promise<void> {
+    await addDoc(this.tablesCollection, table);
+  }
+
+  async updateTable(id: string, data: Partial<Table>): Promise<void> {
+    const docRef = doc(this.firestore, `tables/${id}`);
+    await updateDoc(docRef, data);
+  }
+
+  async deleteTable(id: string): Promise<void> {
+    const docRef = doc(this.firestore, `tables/${id}`);
+    await deleteDoc(docRef);
+  }
+
+  // --- ORDERS ---
+  async createOrder(order: any): Promise<string> {
+    const docRef = await addDoc(this.ordersCollection, {
+      ...order,
+      createdAt: new Date(),
+      status: 'open'
+    });
+    
+    // Mettre à jour le statut de la table
+    if (order.tableId && order.tableId !== 'takeaway') {
+      await this.updateTable(order.tableId, { 
+        status: 'occupied', 
+        currentOrderId: docRef.id 
+      });
+    }
+    
+    return docRef.id;
+  }
+
+  async validateOrder(orderId: string, orderData: any): Promise<void> {
+    const docRef = doc(this.firestore, `orders/${orderId}`);
+    await updateDoc(docRef, { ...orderData, status: 'confirmed' }); // Ou autre logique
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/core/guards/role.guard.ts
+==============================================================================
+import { inject } from '@angular/core';
+import { CanActivateFn, Router, ActivatedRouteSnapshot } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+import { map, take, tap } from 'rxjs/operators';
+import { UserRole } from '../models/interfaces';
+
+export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  
+  // Récupérer les rôles autorisés depuis la route (data: { roles: ['admin', ...] })
+  const expectedRoles: UserRole[] = route.data['roles'] || [];
+
+  return authService.user$.pipe(
+    take(1), // On prend juste la valeur actuelle
+    map(user => {
+      // 1. L'utilisateur doit être connecté
+      if (!user) {
+        return false;
+      }
+
+      // 2. Si aucun rôle n'est spécifié dans la route, accès autorisé par défaut aux users connectés
+      if (expectedRoles.length === 0) {
+        return true;
+      }
+
+      // 3. Vérifier si le rôle de l'utilisateur est dans la liste autorisée
+      const hasRole = expectedRoles.includes(user.role);
+      return hasRole;
+    }),
+    tap(isAuthorized => {
+      if (!isAuthorized) {
+        // Redirection si non autorisé (soit login, soit page 403/Dashboard)
+        console.warn('⛔ Accès refusé par RoleGuard');
+        router.navigate(['/login']); 
+      }
+    })
+  );
+};
+
+
+
+==============================================================================
+FICHIER : src/app/app.component.scss
+==============================================================================
+
+
+
+==============================================================================
+FICHIER : src/app/app.routes.ts
+==============================================================================
+import { Routes } from '@angular/router';
+import { roleGuard } from './core/guards/role.guard';
+
+import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
+import { LoginComponent } from './features/auth/login/login.component';
+import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { StockListComponent } from './features/stock/components/stock-list/stock-list.component';
+import { ProductFormComponent } from './features/stock/components/product-form/product-form.component';
+import { DishListComponent } from './features/dishes/components/dish-list/dish-list.component';
+import { DishFormComponent } from './features/dishes/components/dish-form/dish-form.component';
+import { TableGridComponent } from './features/pos/components/table-grid/table-grid.component';
+import { OrderInterfaceComponent } from './features/pos/components/order-interface/order-interface.component';
+import { EmployeeListComponent } from './features/hr/components/employee-list/employee-list.component';
+import { EmployeeFormComponent } from './features/hr/components/employee-form/employee-form.component'; // NOUVEAU
+import { PlanningComponent } from './features/hr/components/planning/planning.component';
+import { ShiftClosingComponent } from './features/hr/components/shift-closing/shift-closing.component';
+import { ExpenseListComponent } from './features/finance/components/expense-list/expense-list.component';
+
+export const routes: Routes = [
+  { path: 'login', component: LoginComponent },
+
+  {
+    path: '',
+    component: MainLayoutComponent,
+    canActivate: [roleGuard],
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      
+      { 
+        path: 'dashboard', 
+        component: DashboardComponent, 
+        data: { roles: ['super_admin', 'admin', 'server'] } 
+      },
+
+      // STOCK
+      { path: 'stock', component: StockListComponent, data: { roles: ['super_admin', 'admin'] } },
+      { path: 'stock/new', component: ProductFormComponent, data: { roles: ['super_admin', 'admin'] } },
+      
+      // DISHES
+      { path: 'dishes', component: DishListComponent, data: { roles: ['super_admin', 'admin'] } },
+      { path: 'dishes/new', component: DishFormComponent, data: { roles: ['super_admin', 'admin'] } },
+      { path: 'dishes/edit/:id', component: DishFormComponent, data: { roles: ['super_admin', 'admin'] } },
+
+      // POS
+      { path: 'pos/tables', component: TableGridComponent, data: { roles: ['super_admin', 'admin', 'server'] } },
+      { path: 'pos/order', component: OrderInterfaceComponent, data: { roles: ['super_admin', 'admin', 'server'] } },
+
+      // HR
+      { path: 'hr/employees', component: EmployeeListComponent, data: { roles: ['super_admin', 'admin'] } },
+      // ROUTES EMPLOYÉS AJOUTÉES :
+      { path: 'hr/employees/new', component: EmployeeFormComponent, data: { roles: ['super_admin', 'admin'] } },
+      { path: 'hr/employees/edit/:id', component: EmployeeFormComponent, data: { roles: ['super_admin', 'admin'] } },
+      
+      { path: 'hr/planning', component: PlanningComponent, data: { roles: ['super_admin', 'admin', 'server'] } },
+      { path: 'hr/closing', component: ShiftClosingComponent, data: { roles: ['super_admin', 'admin', 'server'] } },
+
+      // FINANCE
+      { path: 'finance/expenses', component: ExpenseListComponent, data: { roles: ['super_admin', 'admin'] } },
+    ]
+  },
+  { path: '**', redirectTo: 'dashboard' }
+];
+
+
+
+==============================================================================
+FICHIER : src/app/layout/main-layout/main-layout.component.ts
+==============================================================================
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterOutlet } from '@angular/router';
+import { HeaderComponent } from '../header/header.component';
+
+@Component({
+  selector: 'app-main-layout',
+  standalone: true,
+  imports: [CommonModule, RouterOutlet, HeaderComponent],
+  template: `
+    <div class="flex h-screen bg-gray-100 overflow-hidden">
+      
+      <app-header 
+        [isOpen]="isSidebarOpen" 
+        (closeMenu)="closeSidebar()">
+      </app-header>
+
+      <div class="flex-1 flex flex-col md:ml-64 transition-all duration-300">
+        
+        <div class="md:hidden bg-white shadow-sm h-16 flex items-center justify-between px-4 z-10 sticky top-0">
+          
+          <div class="flex items-center gap-3">
+            <button (click)="toggleSidebar()" class="text-gray-600 focus:outline-none hover:text-indigo-600 p-2 rounded-md">
+              <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <span class="font-bold text-xl text-gray-800">RestoManager</span>
+          </div>
+          
+          <div class="h-8 w-8 bg-indigo-100 rounded-full border border-indigo-200"></div>
+        </div>
+
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-8">
+          <router-outlet></router-outlet>
+        </main>
+      
+      </div>
+    </div>
+  `
+})
+export class MainLayoutComponent {
+  isSidebarOpen = false;
+
+  toggleSidebar() {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
+
+  closeSidebar() {
+    this.isSidebarOpen = false;
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/layout/header/header.component.ts
+==============================================================================
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
+import { Observable } from 'rxjs';
+import { UserProfile } from '../../core/models/interfaces';
+
+@Component({
+  selector: 'app-header',
+  standalone: true,
+  imports: [CommonModule, RouterLink, RouterLinkActive],
+  template: `
+    <div *ngIf="isOpen" (click)="closeMenu.emit()" 
+         class="fixed inset-0 z-20 bg-black bg-opacity-50 md:hidden transition-opacity">
+    </div>
+
+    <aside class="fixed inset-y-0 left-0 z-30 w-64 bg-indigo-900 text-white transition-transform duration-300 ease-in-out transform flex flex-col shadow-2xl font-sans"
+           [ngClass]="isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'">
+      
+      <div class="flex items-center justify-center h-16 bg-indigo-950 border-b border-indigo-800 shadow-sm shrink-0">
+        <span class="text-3xl mr-2">👨‍🍳</span>
+        <span class="text-xl font-bold tracking-wider">RestoManager</span>
+      </div>
+
+      <nav class="flex-1 overflow-y-auto py-4">
+        
+        <div class="px-4 mb-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider">
+          Service
+        </div>
+
+        <a routerLink="/dashboard" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+           (click)="closeMenu.emit()"
+           class="flex items-center px-4 py-2 text-sm font-medium hover:bg-indigo-800 transition-all mb-1">
+           <span class="mr-3 text-xl">📊</span> Dashboard
+        </a>
+
+        <a routerLink="/pos/tables" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+           (click)="closeMenu.emit()"
+           class="flex items-center px-4 py-2 text-sm font-medium hover:bg-indigo-800 transition-all mb-1">
+           <span class="mr-3 text-xl">🪑</span> Salle & Tables
+        </a>
+
+        <div class="px-4 mt-6 mb-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider">
+          Administration
+        </div>
+
+        <a routerLink="/hr/employees" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+           (click)="closeMenu.emit()"
+           class="flex items-center px-4 py-2 text-sm font-medium hover:bg-indigo-800 transition-all mb-1">
+           <span class="mr-3 text-xl">👥</span> Personnel (CRUD)
+        </a>
+
+        <a routerLink="/hr/planning" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+           (click)="closeMenu.emit()"
+           class="flex items-center px-4 py-2 text-sm font-medium hover:bg-indigo-800 transition-all mb-1">
+           <span class="mr-3 text-xl">📅</span> Planning
+        </a>
+
+        <a routerLink="/dishes" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+           (click)="closeMenu.emit()"
+           class="flex items-center px-4 py-2 text-sm font-medium hover:bg-indigo-800 transition-all mb-1">
+           <span class="mr-3 text-xl">🍽️</span> Menu / Carte
+        </a>
+
+        <a routerLink="/stock" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+           (click)="closeMenu.emit()"
+           class="flex items-center px-4 py-2 text-sm font-medium hover:bg-indigo-800 transition-all mb-1">
+           <span class="mr-3 text-xl">📦</span> Stocks
+        </a>
+
+        <a routerLink="/finance/expenses" routerLinkActive="bg-indigo-800 border-r-4 border-indigo-400" 
+           (click)="closeMenu.emit()"
+           class="flex items-center px-4 py-2 text-sm font-medium hover:bg-indigo-800 transition-all mb-1">
+           <span class="mr-3 text-xl">💰</span> Finance
+        </a>
+
+      </nav>
+
+      <div class="p-4 border-t border-indigo-800 bg-indigo-950 shrink-0">
+        <div *ngIf="user$ | async as user" class="flex items-center gap-3 mb-3">
+          <div class="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-lg">
+            {{ user.displayName?.charAt(0) | uppercase }}
+          </div>
+          <div class="overflow-hidden">
+            <p class="text-sm font-medium text-white truncate">{{ user.displayName }}</p>
+            <p class="text-xs text-indigo-300 truncate">{{ user.role | uppercase }}</p>
+          </div>
+        </div>
+        <button (click)="logout()" class="w-full flex justify-center items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm transition">
+          <span>🚪</span> Déconnexion
+        </button>
+      </div>
+
+    </aside>
+  `
+})
+export class HeaderComponent {
+  @Input() isOpen = false;
+  @Output() closeMenu = new EventEmitter<void>();
+
+  authService = inject(AuthService);
+  user$: Observable<UserProfile | null> = this.authService.user$;
+
+  logout() {
+    this.authService.logout();
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/app.ts
+==============================================================================
+import { Component, signal } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+
+@Component({
+  selector: 'app-root',
+  imports: [RouterOutlet],
+  templateUrl: './app.html',
+  styleUrl: './app.scss'
+})
+export class App {
+  protected readonly title = signal('gestion-restaurant');
+}
+
+
+
+==============================================================================
+FICHIER : src/app/app.component.spec.ts
+==============================================================================
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { AppComponent } from './app.component';
+
+describe('AppComponent', () => {
+  let component: AppComponent;
+  let fixture: ComponentFixture<AppComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AppComponent]
+    })
+    .compileComponents();
+
+    fixture = TestBed.createComponent(AppComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+
+==============================================================================
+FICHIER : src/app/features/auth/login/login.component.ts
+==============================================================================
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
+
+@Component({
+  selector: 'app-login',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  template: `
+    <div class="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="text-center mb-6">
+          <span class="text-4xl">👨‍🍳</span>
+        </div>
+        <h2 class="text-center text-3xl font-extrabold text-gray-900">
+          Gestion Restaurant
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+          Accès réservé au personnel
+        </p>
+      </div>
+
+      <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          
+          <div *ngIf="errorMessage" class="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative text-sm">
+            <span class="block sm:inline">{{ errorMessage }}</span>
+          </div>
+
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Email</label>
+              <input type="email" formControlName="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Mot de passe</label>
+              <input type="password" formControlName="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+
+            <button type="submit" [disabled]="isLoading"
+                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-colors">
+              {{ isLoading ? 'Connexion en cours...' : 'Se connecter' }}
+            </button>
+          </form>
+          
+          </div>
+      </div>
+    </div>
+  `
+})
+export class LoginComponent {
+  fb = inject(FormBuilder);
+  authService = inject(AuthService);
+  router = inject(Router);
+
+  loginForm = this.fb.nonNullable.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', Validators.required]
+  });
+
+  errorMessage: string | null = null;
+  isLoading = false;
+
+  async onSubmit() {
+    if (this.loginForm.valid) {
+      this.isLoading = true;
+      this.errorMessage = null;
+      const { email, password } = this.loginForm.getRawValue();
+
+      try {
+        await this.authService.login(email, password);
+        this.router.navigate(['/dashboard']);
+      } catch (error: any) {
+        console.error(error);
+        this.isLoading = false;
+        // Message d'erreur générique pour sécurité ou spécifique si besoin
+        this.errorMessage = "Identifiants incorrects.";
+      }
+    }
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/features/dashboard/dashboard.component.ts
+==============================================================================
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { FinanceService } from '../../core/services/finance.service';
+import { Observable } from 'rxjs';
+
+@Component({
+  selector: 'app-dashboard',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  template: `
+    <div class="p-6">
+      <h1 class="text-3xl font-bold text-gray-900 mb-8">📊 Tableau de Bord</h1>
+
+      <div *ngIf="stats$ | async as stats; else loading" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm font-medium uppercase">Chiffre d'Affaires Total</p>
+              <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats.totalRevenue | currency:'EUR' }}</p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-full text-green-600 text-2xl">💰</div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-indigo-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm font-medium uppercase">Plat le plus vendu</p>
+              <p class="text-2xl font-bold text-indigo-900 mt-1 truncate max-w-[150px]" [title]="stats.bestSeller.name">
+                {{ stats.bestSeller.name }}
+              </p>
+              <p class="text-xs text-indigo-400 mt-1">{{ stats.bestSeller.count }} ventes</p>
+            </div>
+            <div class="bg-indigo-100 p-3 rounded-full text-indigo-600 text-2xl">🏆</div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-500">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-gray-500 text-sm font-medium uppercase">Alertes Stock</p>
+            <div class="bg-red-100 p-2 rounded-full text-red-600 text-lg">⚠️</div>
+          </div>
+          
+          <div *ngIf="stats.lowStockProducts.length > 0; else noAlert" class="space-y-2 max-h-24 overflow-y-auto">
+            <div *ngFor="let p of stats.lowStockProducts" class="text-sm flex justify-between bg-red-50 p-1 rounded">
+              <span class="text-red-900 font-medium">{{ p.name }}</span>
+              <span class="text-red-600 font-bold">{{ p.quantity }} {{ p.unit }}</span>
+            </div>
+          </div>
+          <ng-template #noAlert>
+            <p class="text-sm text-green-600 font-medium">Tout est OK !</p>
+          </ng-template>
+        </div>
+
+      </div>
+
+      <ng-template #loading>
+        <div class="text-center py-10 text-gray-500">Chargement des données...</div>
+      </ng-template>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <a routerLink="/pos/tables" class="p-4 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 text-center font-bold">
+          📱 Prise de Commande
+        </a>
+        <a routerLink="/stock" class="p-4 bg-white text-gray-700 rounded-lg shadow hover:bg-gray-50 text-center font-bold border">
+          📦 Stocks
+        </a>
+        <a routerLink="/hr/planning" class="p-4 bg-white text-gray-700 rounded-lg shadow hover:bg-gray-50 text-center font-bold border">
+          📅 Planning
+        </a>
+        <a routerLink="/finance/expenses" class="p-4 bg-white text-gray-700 rounded-lg shadow hover:bg-gray-50 text-center font-bold border">
+          💸 Dépenses
+        </a>
+      </div>
+    </div>
+  `
+})
+export class DashboardComponent {
+  financeService = inject(FinanceService);
+  stats$ = this.financeService.getDashboardStats();
+}
+
+
+
+==============================================================================
+FICHIER : src/app/features/pos/components/order-interface/order-interface.component.ts
+==============================================================================
+import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { StockService } from '../../../../core/services/stock.service';
+import { OrderService } from '../../../../core/services/order.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { Dish, OrderItem } from '../../../../core/models/interfaces';
+
+@Component({
+  selector: 'app-order-interface',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="flex flex-col md:flex-row h-screen overflow-hidden bg-gray-50 relative">
+      
+      <div class="w-full md:w-2/3 flex flex-col border-r border-gray-200 h-full">
+        
+        <div class="md:hidden bg-white p-3 flex justify-between items-center shadow-sm z-10">
+           <button (click)="cancelOrder()" class="text-gray-500 text-sm">← Retour</button>
+           <span class="font-bold text-gray-800">
+             {{ tableNumber ? 'Table ' + tableNumber : 'À emporter' }}
+           </span>
+           <div class="w-10"></div> </div>
+
+        <div class="bg-white p-2 md:p-3 shadow-sm z-10 border-b border-gray-100">
+          <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1 px-1">
+            <button *ngFor="let cat of categories" 
+                    (click)="setCategory(cat.id)"
+                    [ngClass]="{
+                      'bg-indigo-600 text-white shadow-md transform scale-105': (activeCategory$ | async) === cat.id,
+                      'bg-gray-100 text-gray-600 hover:bg-gray-200': (activeCategory$ | async) !== cat.id
+                    }"
+                    class="flex-shrink-0 px-4 py-2 md:px-6 md:py-3 rounded-full font-bold text-xs md:text-sm transition-all duration-200 border border-transparent whitespace-nowrap">
+              {{ cat.label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-2 md:p-4 bg-gray-100 pb-24 md:pb-4"> <div *ngIf="filteredDishes$ | async as dishes; else loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+            
+            <button *ngFor="let dish of dishes"
+                    (click)="addToCart(dish)"
+                    [disabled]="!dish.isAvailable"
+                    class="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-gray-100 h-28 md:h-32 flex flex-col justify-between items-start text-left active:scale-95 transition-transform hover:shadow-md disabled:opacity-50 disabled:bg-gray-50 relative overflow-hidden">
+              
+              <div class="w-full relative z-10">
+                <div class="flex justify-between items-start">
+                  <span class="font-bold text-gray-800 text-sm md:text-lg leading-tight line-clamp-2 pr-2">{{ dish.name }}</span>
+                </div>
+                <p class="hidden sm:block text-xs text-gray-400 mt-1 line-clamp-1">{{ dish.description }}</p>
+              </div>
+
+              <div class="flex justify-between items-end w-full relative z-10 mt-2">
+                 <span [ngClass]="dish.isAvailable ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50'" class="text-[10px] px-1 rounded uppercase font-bold tracking-wide">
+                    {{ dish.isAvailable ? 'Dispo' : 'Épuisé' }}
+                 </span>
+                 <span class="text-indigo-600 font-extrabold text-lg md:text-xl bg-indigo-50 px-2 py-0.5 rounded">
+                    {{ dish.price | currency:'EUR' }}
+                 </span>
+              </div>
+            </button>
+
+            <div *ngIf="dishes.length === 0" class="col-span-full flex flex-col items-center justify-center text-gray-400 py-10">
+              <span class="text-4xl mb-2">🍽️</span>
+              <p>Aucun plat ici.</p>
+            </div>
+
+          </div>
+          
+          <ng-template #loading>
+            <div class="flex justify-center items-center h-full">
+              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <div *ngIf="cartItems.length > 0" 
+           class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20 flex justify-between items-center safe-area-bottom">
+        <div class="flex flex-col">
+          <span class="text-xs text-gray-500">{{ cartItems.length }} articles</span>
+          <span class="font-bold text-xl text-indigo-700">{{ totalAmount | currency:'EUR' }}</span>
+        </div>
+        <button (click)="openMobileCart()" 
+                class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-2">
+          <span>Voir Panier</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <div [ngClass]="{
+             'translate-y-full': !isMobileCartOpen, 
+             'translate-y-0': isMobileCartOpen
+           }"
+           class="fixed inset-0 z-30 bg-white transition-transform duration-300 md:translate-y-0 md:static md:w-1/3 md:flex md:flex-col shadow-2xl md:shadow-none flex flex-col h-full">
+        
+        <div class="p-4 bg-indigo-900 text-white flex justify-between items-center shadow-lg shrink-0">
+          <button (click)="closeMobileCart()" class="md:hidden mr-3 p-1 rounded-full hover:bg-white/20">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+             </svg>
+          </button>
+
+          <div class="flex-1">
+            <h2 class="font-bold text-xl">Commande</h2>
+            <p class="text-indigo-200 text-xs uppercase tracking-wider font-semibold hidden md:block">
+              {{ tableNumber ? 'Table ' + tableNumber : 'À emporter' }}
+            </p>
+          </div>
+          <button (click)="cancelOrder()" class="bg-white/10 hover:bg-white/20 px-3 py-1 rounded text-xs transition">
+            Annuler
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50">
+          <div *ngFor="let item of cartItems; let i = index" class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-lg shadow-sm">
+            <div class="flex-1">
+              <div class="font-bold text-gray-800 text-sm">{{ item.dishName }}</div>
+              <div class="text-xs text-gray-500">{{ item.price | currency:'EUR' }}</div>
+            </div>
+            <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-200">
+              <button (click)="decrementQty(i)" class="w-8 h-8 rounded-md bg-white text-gray-600 shadow-sm border border-gray-200 font-bold hover:bg-red-50 hover:text-red-600 transition flex items-center justify-center">-</button>
+              <span class="font-bold w-6 text-center text-sm">{{ item.quantity }}</span>
+              <button (click)="incrementQty(i)" class="w-8 h-8 rounded-md bg-indigo-600 text-white shadow-md font-bold hover:bg-indigo-700 transition flex items-center justify-center">+</button>
+            </div>
+          </div>
+          
+          <div *ngIf="cartItems.length === 0" class="h-full flex flex-col items-center justify-center text-gray-300">
+            <span class="text-6xl mb-4 opacity-50">🛒</span>
+            <p class="font-medium">Panier vide</p>
+          </div>
+        </div>
+
+        <div class="p-4 bg-white border-t border-gray-200 shrink-0 safe-area-bottom">
+          <div class="flex justify-between items-center mb-4 text-gray-800">
+            <span class="text-lg">Total</span>
+            <span class="text-3xl font-extrabold text-indigo-700">{{ totalAmount | currency:'EUR' }}</span>
+          </div>
+          
+          <button (click)="validateOrder()" 
+                  [disabled]="cartItems.length === 0"
+                  class="w-full bg-green-600 hover:bg-green-700 text-white text-lg font-bold py-4 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform flex justify-center items-center gap-2">
+            <span>✅ Valider</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  `
+})
+export class OrderInterfaceComponent implements OnInit {
+  stockService = inject(StockService);
+  orderService = inject(OrderService);
+  authService = inject(AuthService);
+  route = inject(ActivatedRoute);
+  router = inject(Router);
+
+  categories = [
+    { id: 'all', label: 'Tout' },
+    { id: 'starter', label: 'Entrées' },
+    { id: 'main', label: 'Plats' },
+    { id: 'dessert', label: 'Desserts' },
+    { id: 'drink', label: 'Boissons' }
+  ];
+
+  activeCategory$ = new BehaviorSubject<string>('all');
+  
+  filteredDishes$: Observable<Dish[]> = combineLatest([
+    this.stockService.getDishes(),
+    this.activeCategory$
+  ]).pipe(
+    map(([dishes, category]) => {
+      if (category === 'all') return dishes;
+      return dishes.filter(d => d.category === category);
+    })
+  );
+
+  tableId: string | null = null;
+  tableNumber: string | null = null;
+  cartItems: OrderItem[] = [];
+  serverName = 'Serveur';
+  
+  // NOUVEAU: État du panier mobile
+  isMobileCartOpen = false;
+
+  ngOnInit() {
+    this.route.queryParams.subscribe(params => {
+      this.tableId = params['tableId'] || 'takeaway';
+      this.tableNumber = params['tableNumber'];
+    });
+    
+    this.authService.getUserProfile().then(user => {
+      if(user) this.serverName = user.displayName || 'Staff';
+    });
+  }
+
+  setCategory(catId: string) {
+    this.activeCategory$.next(catId);
+  }
+
+  addToCart(dish: Dish) {
+    const existingItem = this.cartItems.find(i => i.dishId === dish.id);
+    if (existingItem) {
+      existingItem.quantity++;
+    } else {
+      this.cartItems.push({
+        dishId: dish.id,
+        dishName: dish.name,
+        quantity: 1,
+        price: dish.price,
+        status: 'pending'
+      });
+    }
+  }
+
+  incrementQty(index: number) {
+    this.cartItems[index].quantity++;
+  }
+
+  decrementQty(index: number) {
+    if (this.cartItems[index].quantity > 1) {
+      this.cartItems[index].quantity--;
+    } else {
+      this.cartItems.splice(index, 1);
+      // Si le panier devient vide sur mobile, on le ferme peut-être ?
+      if (this.cartItems.length === 0) {
+        this.isMobileCartOpen = false;
+      }
+    }
+  }
+
+  get totalAmount() {
+    return this.cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  }
+
+  async validateOrder() {
+    if (this.cartItems.length === 0) return;
+
+    const order: any = {
+      tableId: this.tableId || 'takeaway',
+      serverName: this.serverName,
+      items: this.cartItems,
+      totalAmount: this.totalAmount,
+      status: 'closed' // Simplification pour le demo
+    };
+
+    try {
+      const orderId = await this.orderService.createOrder(order);
+      await this.orderService.validateOrder(orderId, order);
+      alert('Commande validée !');
+      this.router.navigate(['/pos/tables']);
+    } catch (error) {
+      console.error(error);
+      alert('Erreur lors de la commande');
+    }
+  }
+
+  cancelOrder() {
+    this.router.navigate(['/pos/tables']);
+  }
+
+  // --- Gestion Mobile ---
+  openMobileCart() {
+    this.isMobileCartOpen = true;
+  }
+
+  closeMobileCart() {
+    this.isMobileCartOpen = false;
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/features/pos/components/table-grid/table-grid.component.ts
+==============================================================================
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { OrderService } from '../../../../core/services/order.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { Observable, map } from 'rxjs';
+import { Table, UserProfile } from '../../../../core/models/interfaces';
+
+@Component({
+  selector: 'app-table-grid',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  template: `
+    <div class="p-6 bg-gray-50 min-h-screen">
+      
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h2 class="text-3xl font-bold text-gray-800">Salle & Tables</h2>
+          <p class="text-gray-500">Gérez l'occupation et les paiements</p>
+        </div>
+
+        <div *ngIf="canEdit$ | async" class="flex items-center gap-3 bg-white px-4 py-2 rounded-lg shadow-sm border">
+          <span class="text-sm font-medium text-gray-700">Mode Édition</span>
+          <button (click)="toggleEditMode()" 
+                  [ngClass]="isEditMode ? 'bg-indigo-600' : 'bg-gray-200'"
+                  class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none">
+            <span [ngClass]="isEditMode ? 'translate-x-5' : 'translate-x-0'"
+                  class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        
+        <button *ngIf="isEditMode" (click)="openModal()" 
+                class="h-40 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col justify-center items-center text-gray-400 hover:border-indigo-500 hover:text-indigo-500 hover:bg-white transition bg-gray-50">
+           <span class="text-4xl mb-2">+</span>
+           <span class="font-medium">Ajouter Table</span>
+        </button>
+
+        <div *ngFor="let table of tables$ | async" class="relative group">
+          
+          <button *ngIf="isEditMode" (click)="deleteTable(table.id)"
+                  class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md z-10 hover:bg-red-600 transform hover:scale-110 transition">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+             </svg>
+          </button>
+
+          <button (click)="onTableClick(table)"
+                  [ngClass]="{
+                    'bg-white border-gray-200 hover:border-indigo-500 hover:shadow-md': table.status === 'available',
+                    'bg-red-50 border-red-200': table.status === 'occupied' && (!table.paymentStatus || table.paymentStatus === 'pending'),
+                    'bg-green-50 border-green-200': table.status === 'occupied' && table.paymentStatus === 'paid',
+                    'ring-2 ring-indigo-500 ring-offset-2': isEditMode
+                  }"
+                  class="w-full h-40 rounded-2xl border-2 flex flex-col justify-center items-center shadow-sm transition-all duration-200 relative overflow-hidden">
+            
+            <div [ngClass]="{
+              'bg-green-500': table.status === 'available',
+              'bg-red-500': table.status === 'occupied' && (!table.paymentStatus || table.paymentStatus === 'pending'),
+              'bg-blue-500': table.status === 'occupied' && table.paymentStatus === 'paid',
+              'bg-yellow-500': table.status === 'reserved'
+            }" class="absolute top-4 left-4 w-3 h-3 rounded-full animate-pulse"></div>
+
+            <div *ngIf="table.status === 'occupied' && table.paymentStatus === 'paid'" 
+                 class="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-bl-lg shadow-sm z-10">
+               💰 PAYÉ
+            </div>
+
+             <div *ngIf="table.status === 'occupied' && (!table.paymentStatus || table.paymentStatus === 'pending')" 
+                 class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-bl-lg shadow-sm z-10">
+               ⏳ EN COURS
+            </div>
+
+            <span class="text-3xl font-extrabold text-gray-800">
+               {{ table.number }}
+            </span>
+            
+            <div class="flex items-center gap-1 mt-2 text-gray-400 text-sm">
+               <span>👥</span>
+               <span>{{ table.capacity }} pers.</span>
+            </div>
+
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="!isEditMode" class="mt-12 border-t pt-8">
+         <button (click)="goToTakeaway()" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl shadow-lg font-bold text-lg flex items-center justify-center gap-3">
+            <span>🛍️</span> Commande à emporter
+         </button>
+      </div>
+
+      <div *ngIf="actionTable" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+          <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" (click)="closeActionModal()"></div>
+
+          <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+          <div class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+            
+            <div class="bg-gray-800 px-4 py-3 sm:px-6">
+              <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                Table {{ actionTable.number }}
+                <span class="text-xs font-normal bg-gray-600 px-2 py-1 rounded">{{ actionTable.status | uppercase }}</span>
+              </h3>
+            </div>
+
+            <div class="p-6 space-y-3">
+              
+              <button (click)="goToOrder(actionTable)" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg flex justify-center items-center gap-2">
+                 📝 Voir / Modifier la commande
+              </button>
+
+              <div class="border-t my-2"></div>
+
+              <button *ngIf="actionTable.status === 'occupied' && actionTable.paymentStatus !== 'paid'" 
+                      (click)="markAsPaid(actionTable)" 
+                      class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg flex justify-center items-center gap-2">
+                 💰 Marquer comme Payé
+              </button>
+
+              <button *ngIf="actionTable.status === 'occupied' && actionTable.paymentStatus === 'paid'" 
+                      (click)="markAsPending(actionTable)" 
+                      class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-lg flex justify-center items-center gap-2">
+                 ↩️ Annuler paiement
+              </button>
+
+              <button (click)="freeTable(actionTable)" 
+                      class="w-full bg-white border-2 border-red-500 text-red-600 hover:bg-red-50 font-bold py-3 rounded-lg flex justify-center items-center gap-2 mt-4">
+                 🧹 Libérer la table (Terminer)
+              </button>
+
+            </div>
+
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <button type="button" (click)="closeActionModal()" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:ml-3 sm:w-auto sm:text-sm">
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div *ngIf="showModal" class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+          <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeModal()"></div>
+          <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+          <div class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-indigo-700 px-4 py-3 sm:px-6">
+              <h3 class="text-lg leading-6 font-medium text-white">
+                {{ editingTableId ? 'Modifier la table' : 'Nouvelle table' }}
+              </h3>
+            </div>
+            <form [formGroup]="tableForm" (ngSubmit)="onSubmit()" class="px-4 pt-5 pb-4 sm:p-6">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Numéro</label>
+                  <input type="text" formControlName="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                </div>
+                <div>
+                   <label class="block text-sm font-medium text-gray-700">Capacité</label>
+                   <input type="number" formControlName="capacity" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                </div>
+              </div>
+              <div class="mt-6 flex justify-end gap-3">
+                <button type="button" (click)="closeModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Annuler</button>
+                <button type="submit" [disabled]="tableForm.invalid" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50">Enregistrer</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  `
+})
+export class TableGridComponent {
+  orderService = inject(OrderService);
+  authService = inject(AuthService);
+  router = inject(Router);
+  fb = inject(FormBuilder);
+
+  tables$: Observable<Table[]> = this.orderService.getTables();
+  canEdit$: Observable<boolean> = this.authService.user$.pipe(map(u => u?.role === 'admin' || u?.role === 'super_admin'));
+
+  isEditMode = false;
+  showModal = false;
+  editingTableId: string | null = null;
+  
+  // Table sélectionnée pour l'action (Occupée)
+  actionTable: Table | null = null;
+
+  tableForm = this.fb.group({
+    number: ['', Validators.required],
+    capacity: [4, [Validators.required, Validators.min(1)]]
+  });
+
+  toggleEditMode() { this.isEditMode = !this.isEditMode; }
+
+  onTableClick(table: Table) {
+    if (this.isEditMode) {
+      // MODE EDITION
+      this.editingTableId = table.id;
+      this.tableForm.patchValue({ number: table.number, capacity: table.capacity });
+      this.showModal = true;
+    } else {
+      // MODE SERVICE
+      if (table.status === 'available') {
+        // Nouvelle commande -> On va directement à la caisse
+        this.goToOrder(table);
+      } else {
+        // Table occupée -> On ouvre la modale d'action (Payer / Libérer)
+        this.actionTable = table;
+      }
+    }
+  }
+
+  // --- ACTIONS MODAL ---
+  closeActionModal() { this.actionTable = null; }
+
+  goToOrder(table: Table) {
+    this.router.navigate(['/pos/order'], { queryParams: { tableId: table.id, tableNumber: table.number } });
+    this.closeActionModal();
+  }
+
+  async markAsPaid(table: Table) {
+    if(confirm('Marquer cette table comme PAYÉE ?')) {
+      await this.orderService.updateTable(table.id, { paymentStatus: 'paid' });
+      this.closeActionModal();
+    }
+  }
+
+  async markAsPending(table: Table) {
+    await this.orderService.updateTable(table.id, { paymentStatus: 'pending' });
+    this.closeActionModal();
+  }
+
+  async freeTable(table: Table) {
+    if(confirm('Libérer la table ? (Cela clôturera la session de table)')) {
+      await this.orderService.updateTable(table.id, { 
+        status: 'available', 
+        paymentStatus: 'pending', // Reset
+        currentOrderId: '' // Reset
+      });
+      this.closeActionModal();
+    }
+  }
+
+  // --- CRUD TABLES ---
+  openModal() {
+    this.editingTableId = null;
+    this.tableForm.reset({ capacity: 4 });
+    this.showModal = true;
+  }
+  closeModal() { this.showModal = false; this.editingTableId = null; }
+  
+  async onSubmit() {
+    if (this.tableForm.valid) {
+      const data = this.tableForm.value as any;
+      if (this.editingTableId) await this.orderService.updateTable(this.editingTableId, data);
+      else await this.orderService.addTable({ ...data, status: 'available' });
+      this.closeModal();
+    }
+  }
+  async deleteTable(id: string) {
+    if (confirm('Supprimer cette table ?')) await this.orderService.deleteTable(id);
+  }
+  goToTakeaway() {
+    this.router.navigate(['/pos/order'], { queryParams: { tableId: 'takeaway' } });
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/features/hr/components/employee-list/employee-list.component.ts
+==============================================================================
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { HrService } from '../../../../core/services/hr.service';
+
+@Component({
+  selector: 'app-employee-list',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  template: `
+    <div class="p-6 bg-white rounded-lg shadow-md">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">👥 Personnel & Accès</h2>
+        <a routerLink="/hr/employees/new" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md shadow flex items-center gap-2">
+          <span>+ Ajouter un employé</span>
+        </a>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Employé</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rôle Système</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let emp of employees$ | async">
+              
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold">
+                    {{ emp.displayName?.charAt(0) | uppercase }}
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900">{{ emp.displayName }}</div>
+                    <div class="text-sm text-gray-500">{{ emp.email }}</div>
+                  </div>
+                </div>
+              </td>
+
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span [ngClass]="{
+                  'bg-purple-100 text-purple-800': emp.role === 'super_admin',
+                  'bg-blue-100 text-blue-800': emp.role === 'admin',
+                  'bg-green-100 text-green-800': emp.role === 'server',
+                  'bg-gray-100 text-gray-600': emp.role === 'staff'
+                }" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                  {{ emp.role | uppercase }}
+                </span>
+              </td>
+
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ emp.phone || 'Non renseigné' }}
+              </td>
+
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <a [routerLink]="['/hr/employees/edit', emp.uid]" class="text-indigo-600 hover:text-indigo-900 mr-4">Modifier</a>
+                <button (click)="deleteEmployee(emp.uid)" class="text-red-600 hover:text-red-900">Supprimer</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `
+})
+export class EmployeeListComponent {
+  hrService = inject(HrService);
+  employees$ = this.hrService.getEmployees();
+
+  deleteEmployee(id: string) {
+    if(confirm('Supprimer cette fiche employé ?')) {
+      this.hrService.deleteEmployee(id);
+    }
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/features/hr/components/shift-closing/shift-closing.component.ts
+==============================================================================
+import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { HrService, ClosingReport } from '../../../../core/services/hr.service';
+import { AuthService } from '../../../../core/services/auth.service';
+
+@Component({
+  selector: 'app-shift-closing',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  template: `
+    <div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg border border-gray-100">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-gray-800">🔐 Clôture de Caisse</h2>
+        <p class="text-gray-500">Fin de service pour {{ userName }}</p>
+      </div>
+
+      <div *ngIf="isLoading" class="text-center py-4">Calcul en cours...</div>
+
+      <form *ngIf="!isLoading" [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+        
+        <div class="bg-indigo-50 p-4 rounded-lg text-center">
+          <span class="block text-sm text-indigo-600 font-semibold uppercase">Recette Théorique (Système)</span>
+          <span class="block text-3xl font-bold text-indigo-900">{{ theoreticalAmount | currency:'EUR' }}</span>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Montant réel en caisse</label>
+          <div class="relative rounded-md shadow-sm">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <span class="text-gray-500 sm:text-sm">€</span>
+            </div>
+            <input formControlName="declaredAmount" type="number" 
+                   class="block w-full rounded-md border-gray-300 pl-7 py-3 text-lg focus:border-indigo-500 focus:ring-indigo-500 border shadow-sm">
+          </div>
+        </div>
+
+        <div *ngIf="form.get('declaredAmount')?.value !== null" class="p-3 rounded-lg text-center"
+             [ngClass]="{
+               'bg-green-100 text-green-800': gap === 0,
+               'bg-red-100 text-red-800': gap !== 0
+             }">
+          <span class="text-sm font-bold">Écart : {{ gap | currency:'EUR' }}</span>
+        </div>
+
+        <div>
+           <label class="block text-sm font-medium text-gray-700">Commentaire (si écart)</label>
+           <textarea formControlName="comment" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"></textarea>
+        </div>
+
+        <button type="submit" [disabled]="form.invalid" 
+                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+          Valider la clôture
+        </button>
+      </form>
+    </div>
+  `
+})
+export class ShiftClosingComponent implements OnInit {
+  fb = inject(FormBuilder);
+  hrService = inject(HrService);
+  authService = inject(AuthService);
+  router = inject(Router);
+
+  userName = '';
+  userId = '';
+  theoreticalAmount = 0;
+  isLoading = true;
+
+  form = this.fb.group({
+    declaredAmount: [null as number | null, [Validators.required, Validators.min(0)]],
+    comment: ['']
+  });
+
+  async ngOnInit() {
+    const user = await this.authService.getUserProfile();
+    if (user) {
+      this.userName = user.displayName || 'Utilisateur';
+      this.userId = user.uid;
+      this.theoreticalAmount = await this.hrService.calculateDailyRevenue(this.userName);
+      this.isLoading = false;
+    }
+  }
+
+  get gap(): number {
+    const declared = this.form.get('declaredAmount')?.value || 0;
+    return declared - this.theoreticalAmount;
+  }
+
+  async onSubmit() {
+    if (this.form.valid) {
+      // CORRECTION ICI : Gestion du null pour le commentaire
+      const commentValue = this.form.get('comment')?.value;
+
+      const report: ClosingReport = {
+        userId: this.userId,
+        userName: this.userName,
+        date: new Date(),
+        theoreticalAmount: this.theoreticalAmount,
+        declaredAmount: this.form.get('declaredAmount')?.value || 0,
+        difference: this.gap,
+        // Si commentValue est null, on passe undefined, sinon la string
+        comment: commentValue ?? undefined 
+      };
+
+      await this.hrService.submitClosingReport(report);
+      alert('Clôture enregistrée avec succès !');
+      this.router.navigate(['/']);
+    }
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/features/hr/components/planning/planning.component.ts
+==============================================================================
+import { Component, ElementRef, ViewChild, AfterViewInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { HrService, Shift } from '../../../../core/services/hr.service';
+import { ShiftModalComponent } from './shift-modal/shift-modal.component';
+import { DataSet } from 'vis-data'; 
+import { Timeline } from 'vis-timeline';
+import { firstValueFrom } from 'rxjs';
+import { UserProfile } from '../../../../core/models/interfaces';
+
+@Component({
+  selector: 'app-planning',
+  standalone: true,
+  imports: [CommonModule, ShiftModalComponent],
+  template: `
+    <div class="p-6 bg-white rounded-lg shadow-md h-[calc(100vh-100px)] flex flex-col relative">
+      
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-800">📅 Planning Interactif</h2>
+          <div class="text-sm text-gray-500 flex gap-4 mt-1">
+             <span class="flex items-center gap-1">👀 Vue par défaut : <b>2 Semaines</b></span>
+             <span class="flex items-center gap-1">🖱️ <b>Scroll</b> pour zoomer/dézoomer</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+           <button (click)="openModal()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 shadow flex items-center gap-2">
+             <span>+ Nouveau Shift</span>
+           </button>
+           <button (click)="loadData()" class="text-indigo-600 hover:bg-indigo-50 px-3 py-2 rounded border">Rafraîchir</button>
+        </div>
+      </div>
+      
+      <div #timelineContainer class="flex-1 border rounded bg-gray-50 w-full"></div>
+
+      <app-shift-modal 
+        *ngIf="showModal"
+        [employees]="employees"
+        [initialDate]="selectedDate"
+        [initialUserId]="selectedUserId"
+        [shiftToEdit]="selectedShiftToEdit"
+        (save)="onSaveShift($event)"
+        (cancel)="closeModal()">
+      </app-shift-modal>
+    </div>
+  `
+})
+export class PlanningComponent implements AfterViewInit {
+  @ViewChild('timelineContainer') container!: ElementRef;
+  
+  hrService = inject(HrService);
+  timeline: any;
+  
+  employees: UserProfile[] = [];
+  shifts: Shift[] = [];
+
+  showModal = false;
+  selectedDate = new Date();
+  selectedUserId = '';
+  selectedShiftToEdit: Shift | null = null;
+
+  async ngAfterViewInit() {
+    setTimeout(() => this.loadData(), 100);
+  }
+
+  async loadData() {
+    this.employees = await firstValueFrom(this.hrService.getEmployees());
+    const shiftsData = await firstValueFrom(this.hrService.getShifts());
+    this.shifts = shiftsData;
+
+    const groups = new DataSet(
+      this.employees.map(emp => ({ 
+        id: emp.uid, 
+        content: `<span class="font-bold">${emp.displayName}</span>`
+      }))
+    );
+
+    const items = new DataSet(
+      this.shifts.map(shift => ({
+        id: shift.id,
+        group: shift.userId,
+        start: shift.start,
+        end: shift.end,
+        content: shift.role,
+        type: 'range',
+        style: 'background-color: #e0e7ff; border-color: #4338ca; color: #3730a3; border-radius: 4px; cursor: move;'
+      }))
+    );
+
+    // CONFIGURATION DES DATES (C'est ici qu'on change la vue)
+    const today = new Date();
+    // On commence à minuit aujourd'hui pour être propre
+    today.setHours(0,0,0,0);
+    
+    const twoWeeksLater = new Date(today.getTime() + 1000 * 60 * 60 * 24 * 14); // +14 Jours
+
+    const options = {
+      stack: false,
+      start: today,       // Début : Aujourd'hui
+      end: twoWeeksLater, // Fin : Dans 2 semaines
+      
+      editable: {
+        add: false,
+        remove: true,
+        updateTime: true,
+        updateGroup: true
+      },
+      orientation: 'top',
+      locale: 'fr',
+      
+      // CONFIGURATION DU ZOOM
+      zoomMin: 1000 * 60 * 60 * 12,    // Zoom min : 12 heures (pour voir le détail)
+      zoomMax: 1000 * 60 * 60 * 24 * 31, // Zoom max : 31 jours (pour dézoomer assez large)
+      
+      onAdd: (item: any, callback: any) => { callback(null); },
+
+      onMove: async (item: any, callback: any) => {
+        const updatedShift = {
+            start: new Date(item.start).toISOString(),
+            end: new Date(item.end).toISOString(),
+            userId: item.group
+        };
+        await this.hrService.updateShift(item.id, updatedShift);
+        callback(item);
+      },
+
+      onRemove: async (item: any, callback: any) => {
+        if(confirm('Supprimer ce créneau ?')) {
+          await this.hrService.deleteShift(item.id);
+          callback(item);
+        } else {
+          callback(null);
+        }
+      }
+    };
+
+    if (this.timeline) {
+      this.timeline.setOptions(options); // Mise à jour des options si existe déjà
+      this.timeline.setData({ groups, items });
+      // Force le cadrage sur la fenêtre demandée
+      this.timeline.setWindow(today, twoWeeksLater);
+    } else {
+      this.timeline = new Timeline(this.container.nativeElement as HTMLElement, items, groups, options);
+      
+      this.timeline.on('doubleClick', (props: any) => {
+        if (props.item) {
+          const shift = this.shifts.find(s => s.id === props.item);
+          if (shift) {
+            this.selectedShiftToEdit = shift;
+            this.showModal = true;
+          }
+        } 
+        else if (props.what === 'background' || props.what === 'group-label') {
+          this.selectedDate = props.snappedTime;
+          this.selectedUserId = props.group;
+          this.selectedShiftToEdit = null;
+          this.showModal = true;
+        }
+      });
+    }
+  }
+
+  openModal() {
+    this.selectedDate = new Date();
+    this.selectedUserId = this.employees[0]?.uid || '';
+    this.selectedShiftToEdit = null;
+    this.showModal = true;
+  }
+
+  closeModal() {
+    this.showModal = false;
+    this.selectedShiftToEdit = null;
+  }
+
+  async onSaveShift(formData: any) {
+    this.showModal = false;
+    const baseDateStr = formData.date;
+
+    if (formData.isEdit && formData.originalId) {
+        const slot = formData.slots[0];
+        const startDateTime = new Date(`${baseDateStr}T${slot.start}:00`);
+        const endDateTime = new Date(`${baseDateStr}T${slot.end}:00`);
+        
+        await this.hrService.updateShift(formData.originalId, {
+            userId: formData.userId,
+            start: startDateTime.toISOString(),
+            end: endDateTime.toISOString()
+        });
+    } 
+    else {
+        for (const slot of formData.slots) {
+            const startDateTime = new Date(`${baseDateStr}T${slot.start}:00`);
+            const endDateTime = new Date(`${baseDateStr}T${slot.end}:00`);
+
+            const shift: any = {
+                userId: formData.userId,
+                start: startDateTime.toISOString(),
+                end: endDateTime.toISOString(),
+                role: 'Service', 
+            };
+            await this.hrService.addShift(shift);
+        }
+    }
+    
+    await this.loadData();
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/features/hr/components/planning/shift-modal/shift-modal.component.ts
+==============================================================================
+import { Component, EventEmitter, Input, Output, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule, FormArray, Validators } from '@angular/forms';
+
+// CORRECTION : 5 niveaux de remontée (../../../../../)
+import { UserProfile } from '../../../../../core/models/interfaces';
+import { Shift } from '../../../../../core/services/hr.service';
+
+@Component({
+  selector: 'app-shift-modal',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  template: `
+    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" (click)="close()"></div>
+
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          
+          <div class="bg-indigo-700 px-4 py-3 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-white">
+              {{ isEditMode ? 'Modifier le service' : 'Planifier un service' }}
+            </h3>
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700">Employé</label>
+              <select formControlName="userId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 bg-white">
+                <option *ngFor="let emp of employees" [value]="emp.uid">{{ emp.displayName }}</option>
+              </select>
+            </div>
+
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700">Date</label>
+              <input type="date" formControlName="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+
+            <div class="mb-4">
+              <div class="flex justify-between items-center mb-2">
+                <label class="block text-sm font-medium text-gray-700">Horaires</label>
+                <button *ngIf="!isEditMode" type="button" (click)="addSlot()" class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-200">
+                  + Ajouter plage
+                </button>
+              </div>
+
+              <div formArrayName="slots" class="space-y-2">
+                <div *ngFor="let slot of slots.controls; let i=index" [formGroup]="getSlotGroup(i)" class="flex items-center gap-2 bg-gray-50 p-2 rounded border border-gray-200">
+                  <div class="flex-1">
+                    <span class="text-xs text-gray-500 block">Début</span>
+                    <input type="time" formControlName="start" class="block w-full text-sm rounded border-gray-300 p-1">
+                  </div>
+                  <div class="flex-1">
+                    <span class="text-xs text-gray-500 block">Fin</span>
+                    <input type="time" formControlName="end" class="block w-full text-sm rounded border-gray-300 p-1">
+                  </div>
+                  <button type="button" (click)="removeSlot(i)" *ngIf="slots.length > 1 && !isEditMode" class="text-red-500 hover:text-red-700">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse -mx-6 -mb-4">
+              <button type="submit" [disabled]="form.invalid" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
+                {{ isEditMode ? 'Mettre à jour' : 'Enregistrer' }}
+              </button>
+              <button type="button" (click)="close()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  `
+})
+export class ShiftModalComponent implements OnInit {
+  @Input() employees: UserProfile[] = [];
+  @Input() initialDate: Date = new Date();
+  @Input() initialUserId: string = '';
+  @Input() shiftToEdit: Shift | null = null;
+  
+  @Output() save = new EventEmitter<any>();
+  @Output() cancel = new EventEmitter<void>();
+
+  fb = inject(FormBuilder);
+  isEditMode = false;
+
+  form = this.fb.group({
+    userId: ['', Validators.required],
+    date: ['', Validators.required],
+    slots: this.fb.array([])
+  });
+
+  ngOnInit() {
+    if (this.shiftToEdit) {
+      this.isEditMode = true;
+      const start = new Date(this.shiftToEdit.start);
+      const end = new Date(this.shiftToEdit.end);
+
+      // Helper pour le format HH:mm compatible input time
+      const formatTime = (date: Date) => {
+        const h = date.getHours().toString().padStart(2, '0');
+        const m = date.getMinutes().toString().padStart(2, '0');
+        return `${h}:${m}`; // Utilisation des backticks protégés si besoin, mais ici simple string
+      };
+
+      this.form.patchValue({
+        userId: this.shiftToEdit.userId,
+        date: start.toISOString().split('T')[0]
+      });
+
+      this.addSlot(formatTime(start), formatTime(end));
+
+    } else {
+      this.isEditMode = false;
+      this.form.patchValue({
+        userId: this.initialUserId,
+        date: this.initialDate.toISOString().split('T')[0]
+      });
+      this.addSlot('10:00', '14:00');
+    }
+  }
+
+  get slots() {
+    return this.form.get('slots') as FormArray;
+  }
+
+  getSlotGroup(index: number) {
+    return this.slots.at(index) as any;
+  }
+
+  addSlot(start = '18:00', end = '23:00') {
+    const slotGroup = this.fb.group({
+      start: [start, Validators.required],
+      end: [end, Validators.required]
+    });
+    this.slots.push(slotGroup);
+  }
+
+  removeSlot(index: number) {
+    this.slots.removeAt(index);
+  }
+
+  close() {
+    this.cancel.emit();
+  }
+
+  onSubmit() {
+    if (this.form.valid) {
+      this.save.emit({ ...this.form.value, isEdit: this.isEditMode, originalId: this.shiftToEdit?.id });
+    }
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/features/hr/components/employee-form/employee-form.component.ts
+==============================================================================
+import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
+import { HrService } from '../../../../core/services/hr.service';
+import { UserProfile } from '../../../../core/models/interfaces';
+
+@Component({
+  selector: 'app-employee-form',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  template: `
+    <div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md mt-10">
+      <h2 class="text-2xl font-bold mb-6 text-gray-800">
+        {{ isEditMode ? 'Modifier la fiche employé' : 'Nouveau membre du personnel' }}
+      </h2>
+      
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Nom Complet</label>
+            <input formControlName="displayName" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Email (Connexion)</label>
+            <input formControlName="email" type="email" [readonly]="isEditMode" [class.bg-gray-100]="isEditMode" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+          </div>
+        </div>
+
+        <div *ngIf="!isEditMode">
+            <label class="block text-sm font-medium text-gray-700">Mot de passe provisoire</label>
+            <input formControlName="password" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-yellow-50" placeholder="Minimum 6 caractères">
+            <p class="text-xs text-gray-500 mt-1">Donnez ce mot de passe à l'employé.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+           <div>
+            <label class="block text-sm font-medium text-gray-700">Téléphone</label>
+            <input formControlName="phone" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+          </div>
+           <div>
+              <label class="block text-sm font-medium text-gray-700">Rôle Système</label>
+              <select formControlName="role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-white">
+                  <option value="staff">Staff (Pas d'accès ou limité)</option>
+                  <option value="server">Serveur (Accès POS)</option>
+                  <option value="admin">Admin (Gestion)</option>
+                  <option value="super_admin">Super Admin (Tout)</option>
+              </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-4 border-t gap-3">
+          <button type="button" (click)="cancel()" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+             Annuler
+          </button>
+          <button type="submit" [disabled]="form.invalid || isLoading" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50">
+             {{ isLoading ? 'Enregistrement...' : (isEditMode ? 'Mettre à jour' : 'Créer le compte') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  `
+})
+export class EmployeeFormComponent implements OnInit {
+  fb = inject(FormBuilder);
+  hrService = inject(HrService);
+  router = inject(Router);
+  route = inject(ActivatedRoute);
+
+  isEditMode = false;
+  employeeId: string | null = null;
+  isLoading = false;
+
+  form = this.fb.group({
+    displayName: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
+    password: [''], 
+    phone: [''],
+    // jobTitle supprimé
+    role: ['staff', Validators.required]
+  });
+
+  ngOnInit() {
+    this.employeeId = this.route.snapshot.paramMap.get('id');
+    
+    if (this.employeeId) {
+      this.isEditMode = true;
+      this.form.get('password')?.disable();
+      this.form.get('email')?.disable();
+      this.loadEmployee(this.employeeId);
+    } else {
+      this.form.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
+    }
+  }
+
+  loadEmployee(id: string) {
+    this.hrService.getEmployee(id).subscribe(emp => {
+      if (emp) {
+        this.form.patchValue({
+          displayName: emp.displayName,
+          email: emp.email,
+          phone: emp.phone,
+          // jobTitle supprimé
+          role: emp.role || 'staff'
+        });
+      }
+    });
+  }
+
+  async onSubmit() {
+    if (this.form.valid) {
+      this.isLoading = true;
+      const formVal = this.form.getRawValue();
+
+      const safeDisplayName = formVal.displayName || '';
+      const safeEmail = formVal.email || '';
+      const safePhone = formVal.phone || undefined; 
+      const safeRole = (formVal.role || 'staff') as any;
+
+      try {
+        if (this.isEditMode && this.employeeId) {
+          // UPDATE
+          await this.hrService.updateEmployee(this.employeeId, {
+            displayName: safeDisplayName,
+            phone: safePhone,
+            role: safeRole
+          });
+        } else {
+          // CREATE
+          await this.hrService.createEmployeeWithAuth({
+              uid: '',
+              email: safeEmail,
+              displayName: safeDisplayName,
+              phone: safePhone,
+              role: safeRole,
+              createdAt: new Date()
+          }, formVal.password!); 
+          
+          alert(`Compte créé pour ${safeEmail} !`);
+        }
+        
+        this.router.navigate(['/hr/employees']);
+      } catch (e: any) {
+        console.error(e);
+        alert("Erreur : " + (e.message || e));
+      } finally {
+        this.isLoading = false;
+      }
+    }
+  }
+
+  cancel() {
+    this.router.navigate(['/hr/employees']);
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/features/finance/components/expense-list/expense-list.component.ts
+==============================================================================
+import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FinanceService } from '../../../../core/services/finance.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { Observable } from 'rxjs';
+import { Expense, UserProfile } from '../../../../core/models/interfaces';
+
+@Component({
+  selector: 'app-expense-list',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  template: `
+    <div class="p-6 bg-white rounded-lg shadow-md">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">📉 Gestion des Dépenses</h2>
+
+      <div *ngIf="isAdmin" class="bg-gray-50 p-4 rounded-lg mb-8 border border-gray-200">
+        <h3 class="text-lg font-semibold mb-4 text-indigo-700">Ajouter une dépense</h3>
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Description</label>
+            <input formControlName="description" type="text" class="w-full rounded border-gray-300 p-2 border">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Montant (€)</label>
+            <input formControlName="amount" type="number" class="w-full rounded border-gray-300 p-2 border">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Catégorie</label>
+            <select formControlName="category" class="w-full rounded border-gray-300 p-2 border">
+              <option value="salary">Salaire</option>
+              <option value="rent">Loyer</option>
+              <option value="purchase">Achats MP</option>
+              <option value="utilities">Factures</option>
+              <option value="other">Autre</option>
+            </select>
+          </div>
+          <button type="submit" [disabled]="form.invalid" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+            Ajouter
+          </button>
+        </form>
+      </div>
+
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Catégorie</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Montant</th>
+            <th *ngIf="isAdmin" class="px-6 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let expense of expenses$ | async">
+            <td class="px-6 py-4 text-sm text-gray-500">{{ expense.date?.toDate() | date:'shortDate' }}</td>
+            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ expense.description }}</td>
+            <td class="px-6 py-4 text-sm text-gray-500">
+              <span class="px-2 py-1 text-xs rounded-full bg-gray-100">{{ expense.category }}</span>
+            </td>
+            <td class="px-6 py-4 text-sm text-right text-red-600 font-bold">- {{ expense.amount | currency:'EUR' }}</td>
+            <td *ngIf="isAdmin" class="px-6 py-4 text-right">
+              <button (click)="deleteExpense(expense.id)" class="text-red-400 hover:text-red-700">🗑️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `
+})
+export class ExpenseListComponent implements OnInit {
+  fb = inject(FormBuilder);
+  financeService = inject(FinanceService);
+  authService = inject(AuthService);
+
+  expenses$ = this.financeService.getExpenses();
+  currentUser: UserProfile | null = null;
+
+  form = this.fb.group({
+    description: ['', Validators.required],
+    amount: [0, [Validators.required, Validators.min(0.1)]],
+    category: ['purchase', Validators.required]
+  });
+
+  async ngOnInit() {
+    this.currentUser = await this.authService.getUserProfile();
+  }
+
+  get isAdmin(): boolean {
+    return this.currentUser?.role === 'super_admin';
+  }
+
+  async onSubmit() {
+    if (this.form.valid && this.currentUser) {
+      const expense = {
+        ...this.form.value,
+        date: new Date(),
+        createdBy: this.currentUser.uid
+      } as any;
+      
+      await this.financeService.addExpense(expense);
+      this.form.reset({ category: 'purchase' });
+    }
+  }
+
+  deleteExpense(id: string) {
+    if(confirm('Supprimer cette dépense ?')) {
+      this.financeService.deleteExpense(id);
+    }
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/features/dishes/components/dish-list/dish-list.component.ts
+==============================================================================
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { StockService } from '../../../../core/services/stock.service';
+import { Observable } from 'rxjs';
+import { Dish } from '../../../../core/models/interfaces';
+
+@Component({
+  selector: 'app-dish-list',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  template: `
+    <div class="p-6 bg-white rounded-lg shadow-md">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">🍽️ Gestion du Menu</h2>
+        <a routerLink="/dishes/new" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md shadow flex items-center gap-2">
+          <span>+ Créer une recette</span>
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div *ngFor="let dish of dishes$ | async" class="border rounded-lg p-4 shadow-sm hover:shadow-md transition bg-gray-50 flex flex-col justify-between">
+          
+          <div>
+            <div class="flex justify-between items-start">
+              <h3 class="text-lg font-bold text-gray-900">{{ dish.name }}</h3>
+              <span [ngClass]="{'bg-green-100 text-green-800': dish.isAvailable, 'bg-red-100 text-red-800': !dish.isAvailable}" class="px-2 py-1 text-xs rounded-full">
+                {{ dish.isAvailable ? 'En vente' : 'Indisponible' }}
+              </span>
+            </div>
+            <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ dish.description || 'Pas de description' }}</p>
+            <div class="mt-2 text-xs text-gray-400">
+               {{ dish.ingredients ? dish.ingredients.length : 0 }} Ingrédient(s)
+            </div>
+          </div>
+
+          <div class="mt-4 pt-4 border-t flex justify-between items-center">
+            <span class="text-xl font-bold text-indigo-600">{{ dish.price | currency:'EUR' }}</span>
+            
+            <div class="flex gap-3">
+              <a [routerLink]="['/dishes/edit', dish.id]" class="text-indigo-600 hover:text-indigo-900 font-medium text-sm flex items-center gap-1">
+                ✏️ Modifier
+              </a>
+              <button (click)="deleteDish(dish.id)" class="text-red-500 hover:text-red-700 font-medium text-sm">
+                🗑️
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  `
+})
+export class DishListComponent {
+  stockService = inject(StockService);
+  dishes$: Observable<Dish[]> = this.stockService.getDishes();
+
+  deleteDish(id: string) {
+    if(confirm('Voulez-vous vraiment supprimer ce plat du menu ?')) {
+      this.stockService.deleteDish(id);
+    }
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/features/dishes/components/dish-form/dish-form.component.ts
+==============================================================================
+import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
+import { StockService } from '../../../../core/services/stock.service';
+import { Observable } from 'rxjs';
+import { Product, Dish } from '../../../../core/models/interfaces';
+
+@Component({
+  selector: 'app-dish-form',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  template: `
+    <div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md mt-10">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">
+          {{ isEditMode ? 'Modifier la recette' : 'Créer une nouvelle recette' }}
+        </h2>
+        <span *ngIf="isEditMode" class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">Mode Édition</span>
+      </div>
+      
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Nom du plat</label>
+            <input formControlName="name" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Prix de vente (€)</label>
+            <input formControlName="price" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+          </div>
+        </div>
+
+        <div>
+           <label class="block text-sm font-medium text-gray-700">Catégorie</label>
+           <select formControlName="category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+             <option value="starter">Entrée</option>
+             <option value="main">Plat principal</option>
+             <option value="dessert">Dessert</option>
+             <option value="drink">Boisson</option>
+           </select>
+        </div>
+
+        <div>
+           <label class="block text-sm font-medium text-gray-700">Description</label>
+           <textarea formControlName="description" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></textarea>
+        </div>
+        
+        <div class="border-t pt-4 mt-4">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Ingrédients (Stock)</h3>
+            <button type="button" (click)="addIngredient()" class="text-sm bg-blue-50 text-blue-600 px-3 py-1 rounded hover:bg-blue-100">
+              + Ajouter un ingrédient
+            </button>
+          </div>
+
+          <div formArrayName="ingredients" class="space-y-3">
+            <div *ngFor="let ingredient of ingredients.controls; let i=index" [formGroup]="getIngredientFormGroup(i)" class="flex gap-4 items-end bg-gray-50 p-3 rounded">
+              
+              <div class="flex-grow">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Produit</label>
+                <select formControlName="productId" class="block w-full rounded-md border-gray-300 shadow-sm text-sm p-2 border">
+                  <option value="" disabled>Choisir...</option>
+                  <option *ngFor="let p of products$ | async" [value]="p.id">
+                    {{ p.name }} ({{ p.unit }})
+                  </option>
+                </select>
+              </div>
+
+              <div class="w-32">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Qté</label>
+                <input formControlName="quantity" type="number" class="block w-full rounded-md border-gray-300 shadow-sm text-sm p-2 border">
+              </div>
+
+              <button type="button" (click)="removeIngredient(i)" class="text-red-500 hover:text-red-700 p-2">
+                🗑️
+              </button>
+            </div>
+          </div>
+          
+          <div *ngIf="ingredients.length === 0" class="text-center text-gray-400 py-4 italic text-sm">
+            Aucun ingrédient défini.
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 bg-gray-50 p-3 rounded">
+           <input type="checkbox" formControlName="isAvailable" id="avail" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+           <label for="avail" class="ml-2 block text-sm text-gray-900">Plat disponible à la vente</label>
+        </div>
+
+        <div class="flex justify-end pt-4 border-t gap-3">
+          <button type="button" (click)="cancel()" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+             Annuler
+          </button>
+          <button type="submit" [disabled]="form.invalid" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50">
+             {{ isEditMode ? 'Mettre à jour' : 'Créer le plat' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  `
+})
+export class DishFormComponent implements OnInit {
+  fb = inject(FormBuilder);
+  stockService = inject(StockService);
+  router = inject(Router);
+  route = inject(ActivatedRoute); // Pour lire l'ID dans l'URL
+  
+  products$: Observable<Product[]> = this.stockService.getProducts();
+
+  isEditMode = false;
+  dishId: string | null = null;
+
+  form: FormGroup = this.fb.group({
+    name: ['', Validators.required],
+    description: [''],
+    price: [0, [Validators.required, Validators.min(0)]],
+    category: ['main', Validators.required],
+    ingredients: this.fb.array([]),
+    isAvailable: [true]
+  });
+
+  get ingredients() {
+    return this.form.get('ingredients') as FormArray;
+  }
+
+  getIngredientFormGroup(index: number): FormGroup {
+    return this.ingredients.at(index) as FormGroup;
+  }
+
+  ngOnInit() {
+    // Vérifier si on est en mode édition
+    this.dishId = this.route.snapshot.paramMap.get('id');
+    
+    if (this.dishId) {
+      this.isEditMode = true;
+      this.loadDish(this.dishId);
+    } else {
+      // Mode création : on ajoute une ligne vide par défaut
+      this.addIngredient();
+    }
+  }
+
+  loadDish(id: string) {
+    this.stockService.getDish(id).subscribe(dish => {
+      if (dish) {
+        // Patch des champs simples
+        this.form.patchValue({
+          name: dish.name,
+          description: dish.description,
+          price: dish.price,
+          category: dish.category,
+          isAvailable: dish.isAvailable
+        });
+
+        // Patch des ingrédients (Array)
+        this.ingredients.clear(); // On vide d'abord
+        if (dish.ingredients && dish.ingredients.length > 0) {
+          dish.ingredients.forEach(ing => {
+            this.addIngredient(ing.productId, ing.quantity);
+          });
+        }
+      }
+    });
+  }
+
+  addIngredient(productId = '', quantity = 1) {
+    const ingredientGroup = this.fb.group({
+      productId: [productId, Validators.required],
+      quantity: [quantity, [Validators.required, Validators.min(0.01)]]
+    });
+    this.ingredients.push(ingredientGroup);
+  }
+
+  removeIngredient(index: number) {
+    this.ingredients.removeAt(index);
+  }
+
+  async onSubmit() {
+    if (this.form.valid) {
+      const dishData = this.form.value as any;
+      
+      if (this.isEditMode && this.dishId) {
+        await this.stockService.updateDish(this.dishId, dishData);
+      } else {
+        await this.stockService.addDish(dishData);
+      }
+      
+      this.router.navigate(['/dishes']);
+    }
+  }
+
+  cancel() {
+    this.router.navigate(['/dishes']);
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/features/stock/components/stock-list/stock-list.component.ts
+==============================================================================
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { StockService } from '../../../../core/services/stock.service';
+import { Observable } from 'rxjs';
+import { Product } from '../../../../core/models/interfaces';
+
+@Component({
+  selector: 'app-stock-list',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  template: `
+    <div class="p-6 bg-white rounded-lg shadow-md">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">📦 Gestion du Stock</h2>
+        <a routerLink="/stock/new" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md shadow flex items-center gap-2">
+          <span>+ Nouveau Produit</span>
+        </a>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coût</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let product of products$ | async">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                  {{ product.category }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <span [ngClass]="{'text-red-600 font-bold': product.quantity <= product.minThreshold, 'text-green-600': product.quantity > product.minThreshold}">
+                  {{ product.quantity }} {{ product.unit }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ product.costPrice | currency:'EUR' }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button (click)="deleteProduct(product.id)" class="text-red-600 hover:text-red-900 ml-4">Supprimer</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `
+})
+export class StockListComponent {
+  stockService = inject(StockService);
+  products$: Observable<Product[]> = this.stockService.getProducts();
+
+  deleteProduct(id: string) {
+    if(confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
+      this.stockService.deleteProduct(id);
+    }
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/features/stock/components/product-form/product-form.component.ts
+==============================================================================
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { StockService } from '../../../../core/services/stock.service';
+
+@Component({
+  selector: 'app-product-form',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  template: `
+    <div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md mt-10">
+      <h2 class="text-2xl font-bold mb-6 text-gray-800">Ajouter un produit</h2>
+      
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Nom du produit</label>
+          <input formControlName="name" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-indigo-500 focus:ring-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Catégorie</label>
+            <select formControlName="category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+              <option value="vegetable">Légumes</option>
+              <option value="meat">Viande</option>
+              <option value="dairy">Produits Laitiers</option>
+              <option value="dry">Épicerie sèche</option>
+              <option value="liquid">Boissons/Liquides</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Unité</label>
+            <select formControlName="unit" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+              <option value="kg">Kg</option>
+              <option value="l">Litre</option>
+              <option value="piece">Pièce</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Coût unitaire (€)</label>
+            <input formControlName="costPrice" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Quantité Initiale</label>
+            <input formControlName="quantity" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Seuil d'alerte</label>
+            <input formControlName="minThreshold" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-4">
+          <button type="button" (click)="cancel()" class="mr-3 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">Annuler</button>
+          <button type="submit" [disabled]="form.invalid" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  `
+})
+export class ProductFormComponent {
+  fb = inject(FormBuilder);
+  stockService = inject(StockService);
+  router = inject(Router);
+
+  form = this.fb.group({
+    name: ['', Validators.required],
+    category: ['vegetable', Validators.required],
+    unit: ['kg', Validators.required],
+    costPrice: [0, [Validators.required, Validators.min(0)]],
+    quantity: [0, [Validators.required, Validators.min(0)]],
+    minThreshold: [5, [Validators.required, Validators.min(0)]],
+  });
+
+  async onSubmit() {
+    if (this.form.valid) {
+      await this.stockService.addProduct(this.form.value as any);
+      this.router.navigate(['/stock']);
+    }
+  }
+
+  cancel() {
+    this.router.navigate(['/stock']);
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/app.module.ts
+==============================================================================
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { CommonModule } from '@angular/common';
+import { RouterModule, Routes } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+
+// Import des Composants
+import { AppComponent } from './app.component';
+import { StockComponent } from './stock/stock.component';
+import { OrderComponent } from './pos/order/order.component';
+import { HistoryComponent } from './pos/history/history.component';
+
+const routes: Routes = [
+  { path: '', component: AppComponent }, // Dashboard par défaut (ou changer selon besoin)
+  { path: 'dashboard', component: AppComponent }, 
+  { path: 'stock', component: StockComponent },
+  { path: 'pos/order', component: OrderComponent },
+  { path: 'pos/history', component: HistoryComponent }, // ✅ Route Historique
+  { path: '**', redirectTo: '' }
+];
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    StockComponent,
+    OrderComponent,
+    HistoryComponent
+  ],
+  imports: [
+    BrowserModule,
+    CommonModule,
+    BrowserAnimationsModule,
+    FormsModule,
+    RouterModule.forRoot(routes, { 
+      useHash: true, 
+      scrollPositionRestoration: 'enabled'
+    })
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+
+
+==============================================================================
+FICHIER : src/app/app.component.ts
+==============================================================================
+import { Component, OnInit, HostListener } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  standalone: false, // <--- AJOUT CRUCIAL ICI
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent implements OnInit {
+  title = 'Salem Kamoun - Portfolio';
+  isMenuOpen = false;
+
+  profile = {
+    name: 'Salem Kamoun',
+    location: 'Kerkennah Islands - Sfax - Tunisia',
+    phone: '+216 28 606 748',
+    email: 'kammoun.salem@gmail.com',
+    linkedin: 'https://www.linkedin.com/in/salem-kamoun',
+    summary: `Développeur expert avec 15 ans d'expérience, spécialisé en développement web et mobile (Ionic, Android & iOS, Angular Firebase) et en automatisation intelligente via n8n. Je transforme vos idées en applications mobiles performantes et j'optimise vos processus en créant des agents IA sur mesure. Mon expertise web complète me permet de livrer des solutions digitales innovantes et efficaces.`,
+    skills: [
+      'Angular', 'Firebase', 'Ionic', 'Node.js', 'TypeScript', 
+      'JavaScript', 'n8n', 'PHP', 'VBScript', 'MySQL', 'HTML/CSS', 
+      'Android/iOS', 'Automatisation IA', 'Responsive Design'
+    ],
+    languages: [
+      { name: 'Français', level: 'Native or Bilingual Proficiency' },
+      { name: 'Arabe', level: 'Native or Bilingual Proficiency' },
+      { name: 'Anglais', level: 'Limited Working Proficiency' }
+    ],
+    education: [
+      {
+        institution: 'Institut Supérieur des Sciences Appliquées et de Technologie de Sousse - ISSAT Sousse',
+        degree: 'Diplôme Universitaire de Technologie (DUT) en Informatique',
+        period: 'Septembre 2004 - Juillet 2008',
+        description: 'Formation complète en développement web et bases de données.'
+      }
+    ],
+    experiences: [
+      {
+        company: 'Freelance | Self-Employed',
+        role: 'Développeur Fullstack JS (Angular, Node.js, Firebase)',
+        period: 'Juin 2025 - Présent (5 mois)',
+        location: 'Kerkennah, Gouvernorat de Sfax, Tunisie',
+        description: `Développement d'applications web et mobiles avec Angular, Ionic, Firebase. Intégration d'automatisation IA via n8n pour analyse de données patients. UI responsive et mobile-friendly avec Angular Material et Bootstrap. Exemple : https://passonbuddy-b6f53.web.app/landing`
+      },
+      {
+        company: 'passOnBuddy',
+        role: 'Owner/Worker @ passOnBuddy.com',
+        period: 'Janvier 2022 - Février 2023 (1 an 2 mois)',
+        location: 'Tunisie',
+        description: `Plateforme de mise en relation professionnelle : "N'embauchez plus d'inconnu !" Connexion LinkedIn-freelancer.com pour publication rapide de tâches. Développement fullstack avec JavaScript et bases de données.`
+      },
+      {
+        company: 'Refer',
+        role: 'Développeur FullStack JS',
+        period: 'Juin 2020 - Décembre 2021 (1 an 7 mois)',
+        location: 'Tunisie',
+        description: `Application mobile iOS/Android pour élargir le réseau LinkedIn. Technologies : JavaScript, TypeScript, Firebase, Ionic, Figma pour UI/UX.`
+      },
+      {
+        company: 'Tedemis',
+        role: 'Spécialiste en Développement Web',
+        period: 'Février 2011 - Août 2016 (5 ans 7 mois)',
+        location: 'Paris, France & Tunisie (à distance)',
+        description: `Développement de jeux concours pour Carrefour, Vogue, Disneyland Paris. Stack : PHP, MySQL, HTML/CSS, Zend Framework, méthodologie SCRUM.`
+      },
+      {
+        company: 'Proxym-IT',
+        role: 'Développeur Web',
+        period: 'Septembre 2009 - Novembre 2010 (1 an 3 mois)',
+        location: 'Sousse, Tunisie',
+        description: `Applications web avec JavaScript (jQuery, ExtJS), PHP5, CakePHP, MySQL.`
+      },
+      {
+        company: 'MINISIS Inc.',
+        role: 'Développeur Front-end (VBS, HTML, JavaScript)',
+        period: 'Octobre 2008 - Mai 2009 (8 mois)',
+        location: 'Tunis, Tunisie',
+        description: `Interfaces utilisateur avec VBS, HTML, JavaScript, Microsoft SQL Server.`
+      }
+    ]
+  };
+
+  constructor() {}
+
+  ngOnInit(): void {
+  }
+
+  toggleMenu(): void {
+    this.isMenuOpen = !this.isMenuOpen;
+  }
+
+  closeMenu(): void {
+    this.isMenuOpen = false;
+  }
+
+  onNavClick(targetHash: string): void {
+    this.closeMenu();
+    const targetId = targetHash.substring(1);
+    const element = document.getElementById(targetId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  @HostListener('click', ['$event'])
+  onClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    const link = target.closest('a');
+    if (link && (link.getAttribute('href') || '').includes('#') && !link.href.includes('linkedin')) {
+      event.preventDefault();
+      const href = link.getAttribute('href') || '';
+      const targetId = href.substring(1);
+      const element = document.getElementById(targetId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      this.closeMenu();
+    }
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/pos/order/order.component.css
+==============================================================================
+
+
+
+
+==============================================================================
+FICHIER : src/app/pos/order/order.component.html
+==============================================================================
+<div class="flex flex-col h-screen bg-gray-50 relative overflow-hidden">
+  
+  <header class="bg-white shadow-sm px-4 py-3 sticky top-0 z-40 flex justify-between items-center border-b border-gray-200">
+    <div class="flex flex-col">
+      <div class="flex items-center gap-2">
+        <h1 class="font-bold text-gray-800 text-lg leading-tight">
+          {{ isCartOpen ? '🛒 Mon Panier' : '🍽️ Carte' }}
+        </h1>
+        <span *ngIf="cart.length > 0" class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-orange-200 animate-pulse">
+          En cours
+        </span>
+      </div>
+      <p class="text-xs text-gray-500">Table {{ tableNumber || 'Inconnue' }} <span *ngIf="tableId" class="opacity-50 text-[10px]">({{tableId | slice:0:4}}...)</span></p>
+    </div>
+    
+    <button *ngIf="isCartOpen" (click)="toggleCart()" class="text-blue-600 font-medium text-sm bg-blue-50 px-3 py-1 rounded-full">
+      Fermer
+    </button>
+  </header>
+
+  <main class="flex-1 overflow-y-auto p-4 pb-32 z-0"> 
+    
+    <div *ngIf="!isCartOpen" class="grid grid-cols-2 gap-3 animate-fadeIn">
+      <div *ngFor="let product of menuProducts" 
+           (click)="addToCart(product)"
+           class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center text-center active:scale-95 transition-transform cursor-pointer relative overflow-hidden group">
+        
+        <div class="absolute inset-0 bg-blue-50 opacity-0 group-hover:opacity-20 transition-opacity"></div>
+        
+        <div class="text-4xl mb-2 transform group-hover:scale-110 transition-transform">{{ product.image }}</div>
+        <div class="font-bold text-gray-700 text-sm leading-tight">{{ product.name }}</div>
+        <div class="text-blue-600 font-bold text-xs mt-1 bg-blue-50 px-2 py-0.5 rounded-full">{{ product.price }} DT</div>
+      </div>
+    </div>
+
+    <div *ngIf="isCartOpen" class="animate-slideIn">
+      <div *ngFor="let item of cart" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-3 flex justify-between items-center">
+        <div>
+          <div class="font-bold text-gray-800">{{ item.name }}</div>
+          <div class="text-xs text-gray-500 mt-0.5">Qté: <span class="font-bold text-gray-900">{{ item.quantity }}</span></div>
+        </div>
+        <div class="font-bold text-gray-900 text-lg">{{ item.price * item.quantity | number:'1.2-2' }} <span class="text-xs font-normal text-gray-500">DT</span></div>
+      </div>
+      
+      <div class="mt-6 border-t border-gray-200 pt-4 px-2">
+         <div class="flex justify-between items-center mb-2 text-gray-500 text-sm">
+           <span>Sous-total</span>
+           <span>{{ totalPrice | number:'1.2-2' }} DT</span>
+         </div>
+         <div class="flex justify-between items-center font-bold text-xl text-gray-900">
+           <span>Total</span>
+           <span>{{ totalPrice | number:'1.2-2' }} DT</span>
+         </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer *ngIf="cart.length > 0" 
+          class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-5px_25px_rgba(0,0,0,0.15)] z-50 p-4 transition-transform duration-300">
+    
+    <div class="max-w-xl mx-auto">
+      
+      <div *ngIf="!isCartOpen" class="flex justify-between items-end mb-3 px-1 animate-fadeIn">
+        <span class="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Total commande</span>
+        <span class="text-xl font-black text-gray-900 leading-none">{{ totalPrice | number:'1.2-2' }} <span class="text-sm font-normal text-gray-400">DT</span></span>
+      </div>
+
+      <button (click)="toggleCart()" 
+              [class.bg-blue-600]="!isCartOpen" 
+              [class.hover:bg-blue-700]="!isCartOpen"
+              [class.bg-green-600]="isCartOpen"
+              [class.hover:bg-green-700]="isCartOpen"
+              class="w-full text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center relative overflow-visible group">
+        
+        <span *ngIf="!isCartOpen" class="flex items-center gap-2">📝 Voir la commande</span>
+        <span *ngIf="isCartOpen" class="flex items-center gap-2">✅ Valider / Payer</span>
+
+        <span *ngIf="!isCartOpen" 
+              class="absolute -top-3 -right-2 bg-red-600 text-white text-xs font-bold w-8 h-8 flex items-center justify-center rounded-full border-4 border-white shadow-md animate-bounce">
+          {{ totalItems }}
+        </span>
+
+      </button>
+    </div>
+  </footer>
+
+</div>
+
+
+
+==============================================================================
+FICHIER : src/app/pos/order/order.component.ts
+==============================================================================
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  image: string;
+}
+
+interface CartItem {
+  productId: number;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+@Component({
+  selector: 'app-pos-order',
+  standalone: false,
+  templateUrl: './order.component.html',
+  styleUrls: ['./order.component.css']
+})
+export class OrderComponent implements OnInit {
+  tableId: string | null = null;
+  tableNumber: string | null = null;
+  isCartOpen: boolean = false; 
+
+  // Données du Menu
+  menuProducts: Product[] = [
+    { id: 1, name: 'Pizza 4 Fromages', price: 18.0, category: 'Plats', image: '🍕' },
+    { id: 2, name: 'Burger Chef', price: 14.5, category: 'Plats', image: '🍔' },
+    { id: 3, name: 'Ojja Merguez', price: 12.0, category: 'Plats', image: '🥘' },
+    { id: 4, name: 'Coca-Cola', price: 3.5, category: 'Boissons', image: '🥤' },
+    { id: 5, name: 'Thé à la menthe', price: 2.0, category: 'Boissons', image: '🍵' },
+    { id: 6, name: 'Tiramisu', price: 7.0, category: 'Dessert', image: '🍰' },
+    { id: 7, name: 'Eau Minérale', price: 2.5, category: 'Boissons', image: '💧' },
+    { id: 8, name: 'Salade César', price: 12.0, category: 'Entrées', image: '🥗' },
+  ];
+
+  cart: CartItem[] = [];
+
+  constructor(private route: ActivatedRoute) {}
+
+  ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      this.tableId = params['tableId'];
+      this.tableNumber = params['tableNumber'];
+
+      // --- LOGIQUE DE DÉTECTION ---
+      // Si un ID est présent, on considère que la table est "EN COURS"
+      // On simule la récupération de la commande depuis la base de données
+      if (this.tableId && this.tableId.length > 0) {
+        console.log("⚡ Table détectée (" + this.tableId + ") -> Récupération de la commande...");
+        this.recoverExistingOrder();
+      }
+    });
+  }
+
+  // Simule une commande déjà existante pour cette table
+  recoverExistingOrder() {
+    this.cart = [
+      { productId: 1, name: 'Pizza 4 Fromages', price: 18.0, quantity: 1 },
+      { productId: 4, name: 'Coca-Cola', price: 3.5, quantity: 2 },
+      { productId: 6, name: 'Tiramisu', price: 7.0, quantity: 1 }
+    ];
+  }
+
+  addToCart(product: Product) {
+    const existing = this.cart.find(item => item.productId === product.id);
+    if (existing) {
+      existing.quantity++;
+    } else {
+      this.cart.push({
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: 1
+      });
+    }
+  }
+
+  toggleCart() {
+    this.isCartOpen = !this.isCartOpen;
+  }
+
+  get totalItems(): number {
+    return this.cart.reduce((acc, item) => acc + item.quantity, 0);
+  }
+
+  get totalPrice(): number {
+    return this.cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/pos/history/history.component.ts
+==============================================================================
+import { Component, OnInit } from '@angular/core';
+
+interface OrderHistory {
+  id: string;
+  date: Date;
+  table: string;
+  server: string;
+  total: number;
+  status: 'Payée' | 'En cours' | 'Annulée';
+  itemsCount: number;
+}
+
+@Component({
+  selector: 'app-history',
+  standalone: false,
+  templateUrl: './history.component.html',
+  styles: []
+})
+export class HistoryComponent implements OnInit {
+  
+  // Données brutes (Simulation Base de données)
+  allOrders: OrderHistory[] = [
+    { id: 'CMD-001', date: new Date('2025-12-14T12:30:00'), table: '12', server: 'Ali', total: 45.500, status: 'Payée', itemsCount: 4 },
+    { id: 'CMD-002', date: new Date('2025-12-14T12:45:00'), table: '05', server: 'Sarra', total: 12.000, status: 'En cours', itemsCount: 2 },
+    { id: 'CMD-003', date: new Date('2025-12-14T13:10:00'), table: '08', server: 'Mohamed', total: 85.000, status: 'Payée', itemsCount: 8 },
+    { id: 'CMD-004', date: new Date('2025-12-14T13:15:00'), table: '12', server: 'Ali', total: 0.000, status: 'Annulée', itemsCount: 0 },
+    { id: 'CMD-005', date: new Date('2025-12-14T13:30:00'), table: 'Terrasse-1', server: 'Sarra', total: 22.500, status: 'En cours', itemsCount: 3 },
+    { id: 'CMD-006', date: new Date('2025-12-13T19:00:00'), table: 'VIP-2', server: 'Mohamed', total: 120.000, status: 'Payée', itemsCount: 12 },
+    { id: 'CMD-007', date: new Date('2025-12-13T20:15:00'), table: '05', server: 'Ali', total: 34.000, status: 'Payée', itemsCount: 5 },
+  ];
+
+  // Données filtrées affichées
+  filteredOrders: OrderHistory[] = [];
+
+  // Listes pour les menus déroulants (Select)
+  tables: string[] = [];
+  servers: string[] = [];
+  statuses: string[] = ['Payée', 'En cours', 'Annulée'];
+
+  // Valeurs sélectionnées pour les filtres
+  filterTable: string = '';
+  filterServer: string = '';
+  filterStatus: string = '';
+
+  constructor() {}
+
+  ngOnInit(): void {
+    // Initialisation
+    this.filteredOrders = this.allOrders;
+    
+    // Extraction des valeurs uniques pour les filtres
+    this.tables = [...new Set(this.allOrders.map(o => o.table))].sort();
+    this.servers = [...new Set(this.allOrders.map(o => o.server))].sort();
+  }
+
+  // Fonction de filtrage
+  applyFilters() {
+    this.filteredOrders = this.allOrders.filter(order => {
+      const matchTable = this.filterTable ? order.table === this.filterTable : true;
+      const matchServer = this.filterServer ? order.server === this.filterServer : true;
+      const matchStatus = this.filterStatus ? order.status === this.filterStatus : true;
+      
+      return matchTable && matchServer && matchStatus;
+    });
+  }
+
+  // Helper pour les couleurs de badges
+  getStatusColor(status: string): string {
+    switch(status) {
+      case 'Payée': return 'bg-green-100 text-green-800 border-green-200';
+      case 'En cours': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'Annulée': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  resetFilters() {
+    this.filterTable = '';
+    this.filterServer = '';
+    this.filterStatus = '';
+    this.applyFilters();
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/pos/history/history.component.html
+==============================================================================
+<div class="min-h-screen bg-gray-50 p-4 md:p-8 pb-24">
+  
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+        <span>📜</span> Historique des Commandes
+      </h1>
+      <p class="text-sm text-gray-500 mt-1">Consultez et filtrez les activités passées.</p>
+    </div>
+    
+    <div class="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 text-sm">
+      <span class="text-gray-500">Total affiché :</span>
+      <span class="font-bold text-indigo-600 ml-2">{{ filteredOrders.length }} commandes</span>
+    </div>
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+      
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase">Table</label>
+        <select [(ngModel)]="filterTable" (change)="applyFilters()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+          <option value="">Toutes les tables</option>
+          <option *ngFor="let t of tables" [value]="t">Table {{ t }}</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase">Serveur</label>
+        <select [(ngModel)]="filterServer" (change)="applyFilters()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+          <option value="">Tous les serveurs</option>
+          <option *ngFor="let s of servers" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase">Statut</label>
+        <select [(ngModel)]="filterStatus" (change)="applyFilters()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+          <option value="">Tous les statuts</option>
+          <option *ngFor="let st of statuses" [value]="st">{{ st }}</option>
+        </select>
+      </div>
+
+      <div>
+        <button (click)="resetFilters()" class="w-full text-gray-600 bg-gray-100 hover:bg-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-colors">
+          🔄 Réinitialiser
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left text-gray-500">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
+          <tr>
+            <th scope="col" class="px-6 py-3">Réf</th>
+            <th scope="col" class="px-6 py-3">Date / Heure</th>
+            <th scope="col" class="px-6 py-3">Table</th>
+            <th scope="col" class="px-6 py-3">Serveur</th>
+            <th scope="col" class="px-6 py-3">Articles</th>
+            <th scope="col" class="px-6 py-3">Total</th>
+            <th scope="col" class="px-6 py-3">Statut</th>
+            <th scope="col" class="px-6 py-3 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of filteredOrders" class="bg-white border-b hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 font-medium text-gray-900">{{ order.id }}</td>
+            <td class="px-6 py-4">
+              {{ order.date | date:'dd/MM/yyyy' }} <br>
+              <span class="text-xs text-gray-400">{{ order.date | date:'HH:mm' }}</span>
+            </td>
+            <td class="px-6 py-4 font-bold text-gray-800">{{ order.table }}</td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">
+                  {{ order.server.charAt(0) }}
+                </div>
+                {{ order.server }}
+              </div>
+            </td>
+            <td class="px-6 py-4">{{ order.itemsCount }}</td>
+            <td class="px-6 py-4 font-bold text-gray-900">{{ order.total | number:'1.2-2' }} DT</td>
+            <td class="px-6 py-4">
+              <span [class]="getStatusColor(order.status) + ' px-2.5 py-0.5 rounded-full text-xs font-medium border'">
+                {{ order.status }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button class="font-medium text-blue-600 hover:underline">Détails</button>
+            </td>
+          </tr>
+          
+          <tr *ngIf="filteredOrders.length === 0">
+            <td colspan="8" class="px-6 py-10 text-center text-gray-400">
+              Aucune commande trouvée avec ces filtres.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+
+
+==============================================================================
+FICHIER : src/app/app.config.ts
+==============================================================================
+import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { provideRouter } from '@angular/router';
+
+import { routes } from './app.routes';
+import { environment } from '../environments/environment';
+
+// Imports Firebase
+import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
+import { provideAuth, getAuth } from '@angular/fire/auth';
+import { provideFirestore, getFirestore } from '@angular/fire/firestore';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideZoneChangeDetection({ eventCoalescing: true }), 
+    provideRouter(routes),
+    
+    // Initialisation Firebase
+    provideFirebaseApp(() => initializeApp(environment.firebase)),
+    provideAuth(() => getAuth()),
+    provideFirestore(() => getFirestore())
+  ]
+};
+
+
+
+==============================================================================
+FICHIER : src/app/app.component.css
+==============================================================================
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+/* Image de profil par défaut (SVG placeholder) */
+#profile-image {
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjEwMCIgZmlsbD0iIzkwN2RlYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iMC4zZW0iIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjYwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiI+U0s8L3RleHQ+PC9zdmc+');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Responsive pour mobile */
+@media (max-width: 768px) {
+  nav ul {
+    display: none;
+  }
+  
+  .parallax-section {
+    background-attachment: scroll; /* Pas de parallax sur mobile pour perf */
+    height: 80vh;
+  }
+  
+  #profile-image {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/app.html
+==============================================================================
+<router-outlet />
+
+
+
+==============================================================================
+FICHIER : src/app/stock/stock.component.html
+==============================================================================
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 pt-24">
+  <div class="max-w-7xl mx-auto">
+    
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-gray-900">📦 Gestion de Stock</h1>
+      <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition duration-300 flex items-center gap-2">
+        <span>+</span> <span class="hidden sm:inline">Ajouter Produit</span>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 md:hidden">
+      <div *ngFor="let p of products" class="bg-white p-4 rounded-xl shadow border border-gray-100">
+        <div class="flex justify-between items-start mb-2">
+          <div>
+            <h3 class="font-bold text-lg text-gray-800">{{ p.name }}</h3>
+            <span class="text-sm text-gray-500">{{ p.category }}</span>
+          </div>
+          <span [ngClass]="getStatusColor(p.status)" class="px-2 py-1 rounded-full text-xs font-semibold">
+            {{ p.status }}
+          </span>
+        </div>
+        <div class="flex justify-between items-center mt-4 pt-3 border-t border-gray-100">
+          <div class="flex flex-col">
+            <span class="text-xs text-gray-400">Quantité</span>
+            <span class="font-semibold text-gray-700">{{ p.quantity }} pcs</span>
+          </div>
+          <div class="flex flex-col text-right">
+            <span class="text-xs text-gray-400">Prix</span>
+            <span class="font-bold text-blue-600">{{ p.price }} TND</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hidden md:block overflow-hidden rounded-xl shadow-lg border border-gray-200 bg-white">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">État</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prix</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <tr *ngFor="let p of products" class="hover:bg-gray-50 transition duration-150">
+            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ p.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ p.category }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span [ngClass]="getStatusColor(p.status)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                {{ p.status }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ p.quantity }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ p.price }} TND</td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
+              <a href="#" class="text-red-600 hover:text-red-900">Delete</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+
+
+==============================================================================
+FICHIER : src/app/stock/stock.component.ts
+==============================================================================
+import { Component, OnInit } from '@angular/core';
+
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  quantity: number;
+  price: number;
+  status: 'In Stock' | 'Low Stock' | 'Out of Stock';
+}
+
+@Component({
+  selector: 'app-stock',
+  standalone: false,  // <--- AJOUT CRUCIAL ICI
+  templateUrl: './stock.component.html',
+  styleUrls: ['./stock.component.css']
+})
+export class StockComponent implements OnInit {
+  products: Product[] = [
+    { id: 1, name: 'MacBook Pro M2', category: 'Electronics', quantity: 12, price: 4500, status: 'In Stock' },
+    { id: 2, name: 'Iphone 15', category: 'Phone', quantity: 4, price: 3200, status: 'Low Stock' },
+    { id: 3, name: 'Samsung S24', category: 'Phone', quantity: 0, price: 2800, status: 'Out of Stock' },
+    { id: 4, name: 'Dell XPS 15', category: 'Electronics', quantity: 8, price: 3800, status: 'In Stock' },
+    { id: 5, name: 'Sony WH-1000XM5', category: 'Audio', quantity: 15, price: 900, status: 'In Stock' },
+  ];
+
+  constructor() { }
+
+  ngOnInit(): void { }
+
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'In Stock': return 'bg-green-100 text-green-800';
+      case 'Low Stock': return 'bg-yellow-100 text-yellow-800';
+      case 'Out of Stock': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  }
+}
+
+
+
+==============================================================================
+FICHIER : src/app/stock/stock.component.css
+==============================================================================
+
+
+
+
+==============================================================================
+FICHIER : src/app/app.scss
+==============================================================================
+
+
+
+==============================================================================
+FICHIER : src/main.ts
+==============================================================================
+import { bootstrapApplication } from '@angular/platform-browser';
+import { appConfig } from './app/app.config';
+import { App } from './app/app';
+
+bootstrapApplication(App, appConfig)
+  .catch((err) => console.error(err));
+
+
+
+==============================================================================
+FICHIER : src/environments/environment.prod.ts
+==============================================================================
+export const environment = {
+  production: true,
+  firebase: {
+    apiKey: 'AIzaSyBJsxQA6negkfhN2uDnpBC6uWrLBAO4p-0',
+    authDomain: 'gestionrestorant.firebaseapp.com',
+    databaseURL: 'https://gestionrestorant-default-rtdb.firebaseio.com',
+    projectId: 'gestionrestorant',
+    storageBucket: 'gestionrestorant.firebasestorage.app',
+    messagingSenderId: '205529562324',
+    appId: '1:205529562324:web:3aabf43f789ddfa0f40f41',
+    measurementId: 'G-2P07XN1Q4K'
+  }
+};
+
+
+
+==============================================================================
+FICHIER : src/environments/environment.ts
+==============================================================================
+export const environment = {
+  production: false,
+  firebase: {
+    apiKey: 'AIzaSyBJsxQA6negkfhN2uDnpBC6uWrLBAO4p-0',
+    authDomain: 'gestionrestorant.firebaseapp.com',
+    databaseURL: 'https://gestionrestorant-default-rtdb.firebaseio.com',
+    projectId: 'gestionrestorant',
+    storageBucket: 'gestionrestorant.firebasestorage.app',
+    messagingSenderId: '205529562324',
+    appId: '1:205529562324:web:3aabf43f789ddfa0f40f41',
+    measurementId: 'G-2P07XN1Q4K'
+  }
+};
+
+
+
+==============================================================================
+FICHIER : src/styles.scss
+==============================================================================
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Autres styles globaux ici */
+html, body { height: 100%; }
+
+/* Styles Vis-Timeline */
+@import 'vis-timeline/styles/vis-timeline-graph2d.min.css';
+
+.vis-item {
+  border-color: #4f46e5;
+  background-color: #e0e7ff;
+  color: #3730a3;
+  font-size: 14px;
+}
+.vis-item.vis-selected {
+  background-color: #4f46e5;
+  color: white;
+  border-color: #312e81;
+}
+
+
+

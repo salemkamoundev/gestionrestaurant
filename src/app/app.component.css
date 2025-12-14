@@ -1,0 +1,28 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+/* Image de profil par défaut (SVG placeholder) */
+#profile-image {
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjEwMCIgZmlsbD0iIzkwN2RlYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iMC4zZW0iIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjYwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiI+U0s8L3RleHQ+PC9zdmc+');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Responsive pour mobile */
+@media (max-width: 768px) {
+  nav ul {
+    display: none;
+  }
+  
+  .parallax-section {
+    background-attachment: scroll; /* Pas de parallax sur mobile pour perf */
+    height: 80vh;
+  }
+  
+  #profile-image {
+    width: 150px;
+    height: 150px;
+  }
+}

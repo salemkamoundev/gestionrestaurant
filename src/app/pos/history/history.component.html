@@ -1,0 +1,106 @@
+<div class="min-h-screen bg-gray-50 p-4 md:p-8 pb-24">
+  
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+        <span>📜</span> Historique des Commandes
+      </h1>
+      <p class="text-sm text-gray-500 mt-1">Consultez et filtrez les activités passées.</p>
+    </div>
+    
+    <div class="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 text-sm">
+      <span class="text-gray-500">Total affiché :</span>
+      <span class="font-bold text-indigo-600 ml-2">{{ filteredOrders.length }} commandes</span>
+    </div>
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+      
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase">Table</label>
+        <select [(ngModel)]="filterTable" (change)="applyFilters()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+          <option value="">Toutes les tables</option>
+          <option *ngFor="let t of tables" [value]="t">Table {{ t }}</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase">Serveur</label>
+        <select [(ngModel)]="filterServer" (change)="applyFilters()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+          <option value="">Tous les serveurs</option>
+          <option *ngFor="let s of servers" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase">Statut</label>
+        <select [(ngModel)]="filterStatus" (change)="applyFilters()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+          <option value="">Tous les statuts</option>
+          <option *ngFor="let st of statuses" [value]="st">{{ st }}</option>
+        </select>
+      </div>
+
+      <div>
+        <button (click)="resetFilters()" class="w-full text-gray-600 bg-gray-100 hover:bg-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-colors">
+          🔄 Réinitialiser
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left text-gray-500">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
+          <tr>
+            <th scope="col" class="px-6 py-3">Réf</th>
+            <th scope="col" class="px-6 py-3">Date / Heure</th>
+            <th scope="col" class="px-6 py-3">Table</th>
+            <th scope="col" class="px-6 py-3">Serveur</th>
+            <th scope="col" class="px-6 py-3">Articles</th>
+            <th scope="col" class="px-6 py-3">Total</th>
+            <th scope="col" class="px-6 py-3">Statut</th>
+            <th scope="col" class="px-6 py-3 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of filteredOrders" class="bg-white border-b hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 font-medium text-gray-900">{{ order.id }}</td>
+            <td class="px-6 py-4">
+              {{ order.date | date:'dd/MM/yyyy' }} <br>
+              <span class="text-xs text-gray-400">{{ order.date | date:'HH:mm' }}</span>
+            </td>
+            <td class="px-6 py-4 font-bold text-gray-800">{{ order.table }}</td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">
+                  {{ order.server.charAt(0) }}
+                </div>
+                {{ order.server }}
+              </div>
+            </td>
+            <td class="px-6 py-4">{{ order.itemsCount }}</td>
+            <td class="px-6 py-4 font-bold text-gray-900">{{ order.total | number:'1.2-2' }} DT</td>
+            <td class="px-6 py-4">
+              <span [class]="getStatusColor(order.status) + ' px-2.5 py-0.5 rounded-full text-xs font-medium border'">
+                {{ order.status }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button class="font-medium text-blue-600 hover:underline">Détails</button>
+            </td>
+          </tr>
+          
+          <tr *ngIf="filteredOrders.length === 0">
+            <td colspan="8" class="px-6 py-10 text-center text-gray-400">
+              Aucune commande trouvée avec ces filtres.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
